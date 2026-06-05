@@ -1,0 +1,37 @@
+[
+  {
+    "name": "蘇芸德",
+    "project": "NativePlantAI",
+    "url": "https://nativeplantai6.netlify.app/",
+    "description": "",
+    "password": "su2025"
+  },
+  {
+    "name": "王澄音",
+    "project": "AI 套房空間設計遊戲",
+    "url": "https://studio-apartment-game.vercel.app/",
+    "description": "",
+    "password": "wang2025"
+  },
+  {
+    "name": "曾宇凱",
+    "project": "陽台植栽 AI 診斷機器人",
+    "url": "https://balcony-plant-ai.vercel.app/",
+    "description": "",
+    "password": "tseng2025"
+  },
+  {
+    "name": "莊旻栩",
+    "project": "恢復性環境評估與改善機器人",
+    "url": "https://restorative-env-ai.vercel.app/",
+    "description": "",
+    "password": "chuang2025"
+  },
+  {
+    "name": "陳芅睿",
+    "project": "AI 景觀設計研究",
+    "url": "https://landscape-mci8.onrender.com/",
+    "description": "",
+    "password": "chen2025"
+  }
+]

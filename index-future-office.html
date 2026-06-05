@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 智慧景觀設計 — 東海大學光點計畫</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f3ef;
+  --card:#ffffff;
+  --text:#1c1c1c;
+  --muted:#7a7a7a;
+  --accent:#3a5a40;
+  --accent-bg:#eef3ee;
+  --border:#e2ded7;
+  --radius:12px;
+}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── Header ── */
+header{
+  padding:80px 48px 64px;
+  text-align:center;
+  background:linear-gradient(160deg,#f0eeea 0%,#f4f3ef 60%);
+  border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+header::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(58,90,64,.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.eyebrow{
+  display:inline-block;
+  font-size:.72rem;letter-spacing:.35em;
+  color:var(--accent);text-transform:uppercase;font-weight:500;
+  margin-bottom:20px;
+  padding:5px 16px;border:1px solid rgba(58,90,64,.3);border-radius:100px;
+  background:rgba(58,90,64,.05);
+}
+h1{
+  font-family:'Noto Serif TC',serif;
+  font-size:clamp(2rem,5vw,3.4rem);
+  font-weight:300;letter-spacing:.06em;line-height:1.25;
+  color:var(--text);margin-bottom:18px;
+}
+.header-sub{
+  font-size:.92rem;color:var(--muted);font-weight:300;
+  line-height:1.8;max-width:520px;margin:0 auto;
+}
+.divider{
+  width:40px;height:1px;background:var(--accent);
+  margin:24px auto;opacity:.4;
+}
+
+/* ── Main ── */
+main{max-width:1200px;margin:0 auto;padding:64px 40px 100px}
+.section-label{
+  font-size:.72rem;letter-spacing:.22em;color:var(--muted);
+  text-transform:uppercase;margin-bottom:36px;
+}
+
+/* ── Cards ── */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:22px;
+}
+.card:nth-child(1){grid-column:1/3}
+.card:nth-child(2){grid-column:3/5}
+.card:nth-child(3){grid-column:5/7}
+.card:nth-child(4){grid-column:2/4}
+.card:nth-child(5){grid-column:4/6}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:32px;
+  display:flex;flex-direction:column;
+  transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;
+}
+.card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 12px 40px rgba(0,0,0,.1);
+  border-color:#ccc8c0;
+}
+.card-num{
+  font-size:.68rem;letter-spacing:.15em;color:var(--muted);
+  margin-bottom:14px;font-weight:400;
+}
+.card-project{
+  font-family:'Noto Serif TC',serif;
+  font-size:1.3rem;font-weight:400;
+  line-height:1.35;margin-bottom:6px;
+}
+.card-name{
+  font-size:.8rem;color:var(--muted);font-weight:400;
+  margin-bottom:18px;padding-bottom:18px;
+  border-bottom:1px solid var(--border);
+}
+.card-desc{
+  font-size:.88rem;color:var(--muted);
+  line-height:1.8;flex:1;font-weight:300;
+}
+.card-desc.placeholder{font-style:italic;opacity:.7}
+.card-actions{display:flex;gap:10px;margin-top:26px}
+.btn-visit{
+  flex:1;padding:11px 16px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:7px;
+  font-size:.82rem;font-family:'Noto Sans TC',sans-serif;
+  cursor:pointer;text-decoration:none;text-align:center;
+  letter-spacing:.03em;
+  transition:background .2s;
+}
+.btn-visit:hover{background:#2d4831}
+.btn-process{
+  flex:1;padding:11px 14px;background:transparent;
+  color:var(--accent);border:1px solid var(--accent);
+  border-radius:7px;font-size:.82rem;
+  font-family:'Noto Sans TC',sans-serif;cursor:pointer;
+  text-decoration:none;text-align:center;
+  transition:all .2s;white-space:nowrap;
+}
+.btn-process:hover{background:var(--accent-bg)}
+.btn-edit{
+  padding:11px 14px;background:transparent;
+  color:var(--muted);border:1px solid var(--border);
+  border-radius:7px;font-size:.78rem;
+  font-family:'Noto Sans TC',sans-serif;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+.btn-edit:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+
+/* ── Modal ── */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(20,20,20,.45);backdrop-filter:blur(4px);
+  z-index:200;align-items:center;justify-content:center;
+}
+.overlay.open{display:flex}
+.modal{
+  background:#fff;border-radius:18px;
+  padding:44px 40px;width:92%;max-width:500px;
+  box-shadow:0 24px 72px rgba(0,0,0,.18);
+  animation:slideUp .2s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.modal-head{margin-bottom:28px}
+.modal-head h2{font-family:'Noto Serif TC',serif;font-size:1.25rem;font-weight:400;margin-bottom:4px}
+.modal-head p{font-size:.82rem;color:var(--muted)}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:.76rem;color:var(--muted);letter-spacing:.06em;margin-bottom:7px}
+.field input,.field textarea{
+  width:100%;padding:10px 14px;
+  border:1.5px solid var(--border);border-radius:8px;
+  font-size:.88rem;font-family:'Noto Sans TC',sans-serif;
+  outline:none;transition:border-color .18s;
+  background:#fafaf8;
+}
+.field input:focus,.field textarea:focus{border-color:var(--accent);background:#fff}
+.field textarea{height:130px;resize:vertical}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
+.btn-cancel{
+  padding:9px 20px;background:transparent;
+  border:1px solid var(--border);border-radius:7px;
+  cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-size:.84rem;
+}
+.btn-cancel:hover{background:#f5f5f2}
+.btn-save{
+  padding:9px 22px;background:var(--accent);color:#fff;
+  border:none;border-radius:7px;cursor:pointer;
+  font-family:'Noto Sans TC',sans-serif;font-size:.84rem;
+  transition:background .2s;
+}
+.btn-save:hover{background:#2d4831}
+.modal-msg{font-size:.82rem;margin-top:12px;text-align:right;min-height:1.2em}
+.modal-msg.err{color:#c0392b}
+.modal-msg.ok{color:var(--accent)}
+
+/* ── Footer ── */
+footer{
+  text-align:center;padding:32px 24px;
+  font-size:.78rem;color:var(--muted);
+  border-top:1px solid var(--border);
+  letter-spacing:.04em;
+}
+
+@media(max-width:860px){
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .card{grid-column:auto !important}
+}
+@media(max-width:540px){
+  header{padding:56px 24px 48px}
+  main{padding:40px 20px 60px}
+  .cards{grid-template-columns:1fr}
+  .modal{padding:32px 24px}
+}
+
+
+/* ── Future Office Router ── */
+.office{
+  background:linear-gradient(135deg,#ffffff 0%,#f8f7f2 100%);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:38px;
+  margin-bottom:58px;
+  box-shadow:0 12px 40px rgba(0,0,0,.09);
+  display:grid;
+  grid-template-columns:1.05fr .95fr;
+  gap:34px;
+  align-items:start;
+  position:relative;
+  overflow:hidden;
+}
+.office::after{content:'';position:absolute;right:-120px;top:-120px;width:320px;height:320px;border-radius:999px;background:rgba(58,90,64,.055);pointer-events:none;}
+.office-copy,.office-panel{position:relative;z-index:1;}
+.office-kicker{font-size:.72rem;letter-spacing:.24em;color:var(--accent);text-transform:uppercase;margin-bottom:16px;}
+.office h2{font-family:'Noto Serif TC',serif;font-size:clamp(1.55rem,3vw,2.35rem);font-weight:300;line-height:1.35;margin-bottom:16px;}
+.office p{color:var(--muted);line-height:1.9;font-weight:300;font-size:.95rem;}
+.office-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;}
+.tag{font-size:.76rem;color:var(--accent);background:var(--accent-bg);border:1px solid rgba(58,90,64,.15);border-radius:999px;padding:6px 12px;}
+.office-panel{background:rgba(255,255,255,.82);border:1px solid var(--border);border-radius:16px;padding:24px;}
+.office-panel label{display:block;font-size:.76rem;color:var(--muted);letter-spacing:.08em;margin-bottom:8px;}
+.office-panel textarea,.office-panel select{width:100%;border:1.5px solid var(--border);border-radius:10px;background:#fafaf8;font-family:'Noto Sans TC',sans-serif;font-size:.9rem;outline:none;transition:border-color .18s,background .18s;}
+.office-panel textarea{min-height:132px;resize:vertical;padding:13px 15px;line-height:1.7;}
+.office-panel select{padding:10px 12px;margin-bottom:14px;}
+.office-panel textarea:focus,.office-panel select:focus{border-color:var(--accent);background:#fff;}
+.office-actions{display:flex;gap:10px;margin-top:14px;}
+.btn-main{flex:1;padding:12px 16px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:.86rem;font-family:'Noto Sans TC',sans-serif;cursor:pointer;letter-spacing:.03em;transition:background .2s,transform .2s;}
+.btn-main:hover{background:#2d4831;transform:translateY(-1px);}
+.btn-ghost{padding:12px 16px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:9px;font-size:.86rem;font-family:'Noto Sans TC',sans-serif;cursor:pointer;}
+.btn-ghost:hover{background:var(--accent-bg);}
+.result{display:none;margin-top:18px;border-top:1px solid var(--border);padding-top:18px;}
+.result.open{display:block;}
+.result-title{font-family:'Noto Serif TC',serif;font-size:1.05rem;margin-bottom:6px;}
+.result-meta{font-size:.8rem;color:var(--muted);line-height:1.7;margin-bottom:14px;}
+.result-reason{font-size:.88rem;color:var(--muted);line-height:1.8;margin-bottom:14px;}
+.result-link{display:inline-block;text-decoration:none;background:var(--accent);color:#fff;border-radius:8px;padding:10px 15px;font-size:.84rem;}
+.result-link:hover{background:#2d4831;}
+@media(max-width:900px){.office{grid-template-columns:1fr;}}
+@media(max-width:540px){.office{padding:26px;}.office-actions{flex-direction:column;}}
+
+</style>
+</head>
+<body>
+
+<header>
+  <span class="eyebrow">東海大學光點計畫</span>
+  <h1>AI 智慧景觀設計</h1>
+  <div class="divider"></div>
+  <p class="header-sub">五位研究者運用人工智慧技術，探索景觀設計與環境空間的未來可能</p>
+</header>
+
+<main>
+  
+<section class="office" aria-label="未來事務所">
+  <div class="office-copy">
+    <div class="office-kicker">Future Office · AI Router</div>
+    <h2>未來事務所</h2>
+    <p>不知道該使用哪一個 AI 工具嗎？請輸入你的景觀、建築、植栽或環境問題。未來事務所會先依照需求內容，協助判斷最適合的研究工具與使用方向。</p>
+    <div class="office-tags">
+      <span class="tag">景觀設計</span><span class="tag">建築空間</span><span class="tag">原生植物</span><span class="tag">陽台植栽</span><span class="tag">恢復性環境</span>
+    </div>
+  </div>
+  <div class="office-panel">
+    <label for="mode">回應模式</label>
+    <select id="mode"><option value="auto">自動判斷</option><option value="company">公司模式：專業建議</option><option value="teaching">教學模式：引導理解</option></select>
+    <label for="need">你的需求</label>
+    <textarea id="need" placeholder="例如：我想改善家中陽台植栽，但日照不足；或我想把小坪數住宅需求轉成空間設計參數。"></textarea>
+    <div class="office-actions"><button class="btn-main" onclick="recommendTool()">推薦 AI 工具</button><button class="btn-ghost" onclick="clearNeed()">清除</button></div>
+    <div class="result" id="result"><div class="result-title" id="resultTitle"></div><div class="result-meta" id="resultMeta"></div><div class="result-reason" id="resultReason"></div><a class="result-link" id="resultLink" href="#" target="_blank" rel="noopener">前往工具 →</a></div>
+  </div>
+</section>
+
+<p class="section-label">研究成果展示 · Research Works</p>
+  <div class="cards" id="cards"></div>
+</main>
+
+<footer>© 2025 &nbsp;東海大學光點計畫 &nbsp;·&nbsp; AI 智慧景觀設計</footer>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="m-title">編輯研究介紹</h2>
+      <p id="m-sub"></p>
+    </div>
+    <div class="field">
+      <label>研究介紹</label>
+      <textarea id="m-desc" placeholder="簡述你的研究主題、方法與成果（約 80–150 字）"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="save()">儲存</button>
+    </div>
+    <p class="modal-msg" id="m-msg"></p>
+  </div>
+</div>
+
+<script>
+let data=[], cur=null;
+
+async function init(){
+  const r=await fetch('data.json?_='+Date.now());
+  data=await r.json();
+  render();
+}
+
+function render(){
+  document.getElementById('cards').innerHTML=data.map((s,i)=>`
+    <div class="card">
+      <div class="card-num">0${i+1} &nbsp;/&nbsp; 0${data.length}</div>
+      <div class="card-project">${s.project}</div>
+      <div class="card-name">${s.name}</div>
+      <div class="card-desc ${s.description?'':'placeholder'}">${s.description||'研究介紹尚未填寫，請點擊右下角「編輯」填入。'}</div>
+      <div class="card-actions" style="flex-direction:column;gap:8px">
+        <a href="${s.url}" target="_blank" rel="noopener" class="btn-visit">查看研究成果 →</a>
+        <div style="display:flex;gap:8px">
+          <a href="process.php?i=${i}" class="btn-process">研究過程 ↗</a>
+          <button class="btn-edit" onclick="openModal(${i})">編輯介紹</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openModal(i){
+  cur=i;
+  const s=data[i];
+  document.getElementById('m-title').textContent='編輯：'+s.name;
+  document.getElementById('m-sub').textContent=s.project;
+  document.getElementById('m-desc').value=s.description||'';
+  document.getElementById('m-msg').textContent='';
+  document.getElementById('m-msg').className='modal-msg';
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  cur=null;
+}
+
+async function save(){
+  const desc=document.getElementById('m-desc').value.trim();
+ const pass=document.getElementById('m-pass').value.trim();
+  const msg=document.getElementById('m-msg');
+  if(!desc){msg.textContent='請輸入研究介紹';msg.className='modal-msg err';return}
+ if(!pass){msg.textContent='請輸入編輯密碼';msg.className='modal-msg err';return}
+  msg.textContent='儲存中…';msg.className='modal-msg';
+  try{
+    const r=await fetch('save-secure.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({index:cur,description:desc,password:pass})});
+    const res=await r.json();
+    if(res.success){
+      msg.textContent='儲存成功！';msg.className='modal-msg ok';
+      data[cur].description=desc;
+      render();
+      setTimeout(closeModal,900);
+    }else{
+      msg.textContent=res.error||'密碼錯誤，請再試一次';msg.className='modal-msg err';
+    }
+  }catch(e){msg.textContent='網路錯誤，請稍後再試';msg.className='modal-msg err'}
+}
+
+
+
+const officeTools = [
+  {name:'NativePlantAI',owner:'蘇芸德',url:'https://nativeplantai6.netlify.app/',keywords:['piet','自然種植','原生植物','台灣原生','台灣中部','大安溪','濁水溪','植栽替代','景觀植物','植栽設計','選種','多年生','宿根'],reason:'你的需求與 Piet 自然種植法、台灣中部原生植物或植栽選種有關，適合使用 NativePlantAI。'},
+  {name:'AI 套房空間設計遊戲',owner:'王澄音',url:'https://studio-apartment-game.vercel.app/',keywords:['建築','空間','室內','平面','配置','格局','住宅','套房','小坪數','設計參數','需求轉譯','動線','坪數'],reason:'你的需求與建築空間、室內配置或設計參數轉譯有關，適合使用空間設計轉譯工具。'},
+  {name:'陽台植栽 AI 診斷機器人',owner:'曾宇凱',url:'https://balcony-plant-ai.vercel.app/',keywords:['陽台','盆栽','植物照顧','植物診斷','病蟲害','澆水','日照','通風','植栽養護','花園','植栽推薦'],reason:'你的需求與陽台植栽、盆栽養護、日照通風或植物診斷有關，適合使用陽台植栽 AI。'},
+  {name:'恢復性環境評估與改善機器人',owner:'莊旻栩',url:'https://restorative-env-ai.vercel.app/',keywords:['恢復性','art','注意力恢復','療癒','壓力','放鬆','環境評估','場域','自然感','心理恢復'],reason:'你的需求與注意力恢復理論、療癒性景觀或環境恢復性評估有關，適合使用恢復性環境評估工具。'},
+  {name:'AI 景觀設計研究',owner:'陳芅睿',url:'https://landscape-mci8.onrender.com/',keywords:['景觀設計','景觀分析','場地規劃','基地分析','景觀研究'],reason:'你的需求與景觀設計、基地分析或場地規劃有關，適合使用 AI 景觀設計研究工具。'}
+];
+function recommendTool(){
+  const needEl=document.getElementById('need'),modeEl=document.getElementById('mode'),result=document.getElementById('result'),title=document.getElementById('resultTitle'),meta=document.getElementById('resultMeta'),reason=document.getElementById('resultReason'),link=document.getElementById('resultLink');
+  const text=(needEl.value||'').trim().toLowerCase(); const mode=modeEl.value;
+  if(!text){title.textContent='請先輸入需求';meta.textContent='';reason.textContent='請簡單描述你的景觀、建築、植栽或環境問題，未來事務所才能協助推薦工具。';link.style.display='none';result.classList.add('open');return;}
+  let best=null,bestScore=0;
+  officeTools.forEach(tool=>{let score=0;tool.keywords.forEach(k=>{if(text.includes(k.toLowerCase()))score++});if(score>bestScore){bestScore=score;best=tool}});
+  if(!best){best=officeTools[4];bestScore=0;}
+  const modeText={auto:'自動判斷',company:'公司模式：偏向專業建議與實務應用',teaching:'教學模式：偏向引導理解與學習'}[mode]||'自動判斷';
+  title.textContent='推薦工具：'+best.name; meta.textContent='研究者：'+best.owner+'｜回應模式：'+modeText;
+  reason.textContent=bestScore>0?best.reason:'目前沒有完全吻合的關鍵字，因此先推薦較通用的景觀設計研究工具。若不確定，也可以回到研究成果卡片逐一查看。';
+  link.href=best.url; link.style.display='inline-block'; result.classList.add('open');
+}
+function clearNeed(){document.getElementById('need').value='';document.getElementById('result').classList.remove('open');}
+
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
+init();
+</script>
+</body>
+</html>
