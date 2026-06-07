@@ -351,7 +351,7 @@ async function save(){
  if(!pass){msg.textContent='請輸入編輯密碼';msg.className='modal-msg err';return}
   msg.textContent='儲存中…';msg.className='modal-msg';
   try{
-    const r=await fetch('save-secure.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({index:cur,description:desc,password:pass})});
+    const r=await fetch('/api/save-description',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({index:cur,description:desc,password:pass})});
     const res=await r.json();
     if(res.success){
       msg.textContent='儲存成功！';msg.className='modal-msg ok';
