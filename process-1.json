@@ -2,7 +2,7 @@
   "blocks": [
     {
       "type": "text",
-      "content": "早安"
+      "content": "<span style=\"font-size: 1.25em;\">早安</span>"
     },
     {
       "type": "text",
