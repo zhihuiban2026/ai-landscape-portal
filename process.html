@@ -271,9 +271,9 @@ function makeBlockEl(block, i) {
       <div class="text-toolbar">
         <button onmousedown="event.preventDefault()" onclick="fmt('bold',${i})" title="粗體"><b>B</b></button>
         <div class="sep"></div>
-        <div class="size-slider-wrap" onmousedown="event.preventDefault()">
+        <div class="size-slider-wrap">
           <span>字級</span>
-          <input type="range" min="12" max="36" value="16" oninput="previewSize(this)" onchange="fmtSize(this.value+'px',${i})">
+          <input type="range" min="12" max="36" value="16" onmousedown="saveSelection(${i})" oninput="fmtSize(this.value+'px',${i});previewSize(this)">
           <span class="size-slider-val">16px</span>
         </div>
         <div class="sep"></div>
@@ -385,10 +385,18 @@ async function saveProcess() {
 
 // ── Rich text formatting ───────────────────────────────────────────────────
 let _savedRange = null;
-function saveSelForColor(i) {
+function saveSelection(i) {
+  const ed = document.getElementById('re-' + i);
   const sel = window.getSelection();
-  if (sel && sel.rangeCount) _savedRange = sel.getRangeAt(0).cloneRange();
+  if (ed && sel && sel.rangeCount && ed.contains(sel.anchorNode)) _savedRange = sel.getRangeAt(0).cloneRange();
 }
+function restoreSelection() {
+  if (!_savedRange) return;
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(_savedRange);
+}
+function saveSelForColor(i) { saveSelection(i); }
 function fmt(cmd, i) {
   document.execCommand(cmd, false, null);
   const ed = document.getElementById('re-' + i);
@@ -399,9 +407,11 @@ function previewSize(input) {
   if (val) val.textContent = input.value + 'px';
 }
 function fmtSize(size, i) {
-  document.execCommand('fontSize', false, '7');
   const ed = document.getElementById('re-' + i);
   if (!ed) return;
+  ed.focus();
+  restoreSelection();
+  document.execCommand('fontSize', false, '7');
   ed.querySelectorAll('font[size="7"]').forEach(f => {
     const sp = document.createElement('span');
     sp.style.fontSize = size;
@@ -409,6 +419,7 @@ function fmtSize(size, i) {
     f.replaceWith(sp);
   });
   blocks[i].content = ed.innerHTML;
+  saveSelection(i);
 }
 function fmtColor(color, i) {
   const ed = document.getElementById('re-' + i);
