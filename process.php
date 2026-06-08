@@ -177,6 +177,24 @@ main{max-width:860px;margin:0 auto;padding:56px 32px 120px}
 /* ── Footer ── */
 footer{text-align:center;padding:28px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--border)}
 
+
+.entry-blocks{display:flex;flex-direction:column;gap:18px;margin-top:14px}
+.entry-block-text{color:#444;line-height:1.85;font-weight:300;white-space:pre-wrap}
+.entry-block-image figure{margin:0}
+.entry-block-image img{width:100%;max-height:560px;object-fit:contain;border-radius:8px;background:#f7f6f2;cursor:pointer;border:1px solid var(--border)}
+.entry-block-image figcaption{font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:7px;text-align:center}
+.block-editor{border:1px solid var(--border);border-radius:12px;background:#fafaf8;padding:14px;margin-bottom:12px}
+.block-editor-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.block-editor-type{font-size:.78rem;color:var(--accent);font-weight:500;letter-spacing:.05em}
+.block-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.block-controls button{border:1px solid var(--border);background:#fff;border-radius:7px;padding:6px 10px;font-size:.76rem;cursor:pointer;color:var(--muted)}
+.block-controls button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.block-editor textarea{width:100%;min-height:120px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Noto Sans TC',sans-serif;font-size:.88rem;line-height:1.7;background:#fff;resize:vertical}
+.size-control{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:.78rem;color:var(--muted)}
+.size-control input{flex:1}
+.image-picker{display:flex;flex-direction:column;gap:8px}.image-picker select,.image-picker input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:'Noto Sans TC',sans-serif}
+.builder-actions{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 18px}.builder-actions button{padding:9px 14px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-family:'Noto Sans TC',sans-serif}.builder-actions button:hover{background:var(--accent-bg)}
+
 @media(max-width:640px){
   .topnav{padding:12px 20px}
   header{padding:40px 24px 36px}
@@ -218,16 +236,32 @@ footer{text-align:center;padding:28px;font-size:.78rem;color:var(--muted);border
     <?php if (!empty($e['title'])): ?>
     <h2 class="entry-title"><?= htmlspecialchars($e['title']) ?></h2>
     <?php endif; ?>
-    <?php if (!empty($e['text'])): ?>
-    <p class="entry-text"><?= htmlspecialchars($e['text']) ?></p>
-    <?php endif; ?>
-    <?php if (!empty($e['images'])): ?>
-    <div class="entry-images">
-      <?php foreach ($e['images'] as $img): ?>
-      <img src="uploads/<?= htmlspecialchars($img) ?>" alt="" loading="lazy"
-           onclick="lightbox(this.src)">
+    <?php if (!empty($e['blocks']) && is_array($e['blocks'])): ?>
+    <div class="entry-blocks">
+      <?php foreach ($e['blocks'] as $block): ?>
+        <?php if (($block['type'] ?? '') === 'text'): ?>
+          <div class="entry-block-text" style="font-size:<?= max(12, min(36, (int)($block['size'] ?? 16))) ?>px"><?= htmlspecialchars_decode($block['content'] ?? '', ENT_QUOTES) ?></div>
+        <?php elseif (($block['type'] ?? '') === 'image' && !empty($block['file'])): ?>
+          <div class="entry-block-image">
+            <figure>
+              <img src="uploads/<?= htmlspecialchars($block['file']) ?>" alt="" loading="lazy" onclick="lightbox(this.src)">
+              <?php if (!empty($block['caption'])): ?><figcaption><?= htmlspecialchars_decode($block['caption'], ENT_QUOTES) ?></figcaption><?php endif; ?>
+            </figure>
+          </div>
+        <?php endif; ?>
       <?php endforeach; ?>
     </div>
+    <?php else: ?>
+      <?php if (!empty($e['text'])): ?>
+      <p class="entry-text"><?= htmlspecialchars($e['text']) ?></p>
+      <?php endif; ?>
+      <?php if (!empty($e['images'])): ?>
+      <div class="entry-images">
+        <?php foreach ($e['images'] as $img): ?>
+        <img src="uploads/<?= htmlspecialchars($img) ?>" alt="" loading="lazy" onclick="lightbox(this.src)">
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
     <?php endif; ?>
   </div>
   <?php endforeach; ?>
@@ -252,13 +286,18 @@ footer{text-align:center;padding:28px;font-size:.78rem;color:var(--muted);border
       <input type="text" id="m-title" placeholder="例：初步調查、設計迭代、使用者測試…">
     </div>
     <div class="field">
-      <label>研究過程說明</label>
-      <textarea id="m-text" placeholder="描述這個階段的研究過程、方法、發現或心得"></textarea>
+      <label>圖片素材（選填，可多選）</label>
+      <input type="file" id="m-imgs" accept="image/*" multiple onchange="refreshImageOptions()">
+      <p class="file-hint">先選好圖片，再用下方「＋圖片區塊」把圖片穿插到研究過程中。支援 JPG、PNG、WebP，單張上限 10MB。</p>
     </div>
     <div class="field">
-      <label>圖片（選填，可多選）</label>
-      <input type="file" id="m-imgs" accept="image/*" multiple>
-      <p class="file-hint">支援 JPG、PNG、WebP，單張上限 10MB</p>
+      <label>研究過程內容（可自由穿插文字與圖片）</label>
+      <div class="builder-actions">
+        <button type="button" onclick="addTextBlock()">＋文字區塊</button>
+        <button type="button" onclick="addImageBlock()">＋圖片區塊</button>
+      </div>
+      <div id="blocks"></div>
+      <p class="file-hint">文字大小使用拉桿自由調整；區塊可上移/下移來改變排版順序。</p>
     </div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal()">取消</button>
@@ -276,40 +315,76 @@ footer{text-align:center;padding:28px;font-size:.78rem;color:var(--muted);border
 <script>
 const STUDENT_INDEX = <?= $i ?>;
 
-function openModal(){document.getElementById('overlay').classList.add('open')}
+function openModal(){
+  document.getElementById('overlay').classList.add('open');
+  if(!document.querySelector('#blocks .block-editor')) addTextBlock();
+}
 function closeModal(){document.getElementById('overlay').classList.remove('open')}
 function lightbox(src){document.getElementById('lb-img').src=src;document.getElementById('lb').classList.add('open')}
+
+function blockTemplate(type){
+  const id='b'+Date.now()+Math.floor(Math.random()*1000);
+  if(type==='image'){
+    return `<div class="block-editor" data-type="image" id="${id}">
+      <div class="block-editor-head"><span class="block-editor-type">圖片區塊</span>${blockButtons(id)}</div>
+      <div class="image-picker">
+        <select class="block-image-index"></select>
+        <input class="block-caption" type="text" placeholder="圖片說明（選填）">
+      </div>
+    </div>`;
+  }
+  return `<div class="block-editor" data-type="text" id="${id}">
+    <div class="block-editor-head"><span class="block-editor-type">文字區塊</span>${blockButtons(id)}</div>
+    <textarea class="block-content" placeholder="輸入這一段研究過程、方法、發現或心得"></textarea>
+    <div class="size-control"><span>文字大小</span><input class="block-size" type="range" min="12" max="36" value="16" oninput="this.nextElementSibling.textContent=this.value+'px'"><span>16px</span></div>
+  </div>`;
+}
+function blockButtons(id){return `<div class="block-controls"><button type="button" onclick="moveBlock('${id}',-1)">上移</button><button type="button" onclick="moveBlock('${id}',1)">下移</button><button type="button" onclick="removeBlock('${id}')">刪除</button></div>`}
+function addTextBlock(){document.getElementById('blocks').insertAdjacentHTML('beforeend',blockTemplate('text'))}
+function addImageBlock(){document.getElementById('blocks').insertAdjacentHTML('beforeend',blockTemplate('image'));refreshImageOptions()}
+function removeBlock(id){document.getElementById(id)?.remove()}
+function moveBlock(id,dir){const el=document.getElementById(id);if(!el)return;if(dir<0&&el.previousElementSibling)el.parentNode.insertBefore(el,el.previousElementSibling);if(dir>0&&el.nextElementSibling)el.parentNode.insertBefore(el.nextElementSibling,el)}
+function refreshImageOptions(){
+  const files=document.getElementById('m-imgs').files;
+  document.querySelectorAll('.block-image-index').forEach(sel=>{
+    const current=sel.value;
+    sel.innerHTML='';
+    [...files].forEach((f,i)=>{const opt=document.createElement('option');opt.value=i;opt.textContent=`圖片 ${i+1}：${f.name}`;sel.appendChild(opt)});
+    if(files.length===0){const opt=document.createElement('option');opt.value='';opt.textContent='請先選擇圖片素材';sel.appendChild(opt)}
+    if(current) sel.value=current;
+  });
+}
+function collectBlocks(){
+  return [...document.querySelectorAll('#blocks .block-editor')].map(el=>{
+    if(el.dataset.type==='text'){
+      return {type:'text',content:el.querySelector('.block-content').value.trim(),size:parseInt(el.querySelector('.block-size').value,10)};
+    }
+    return {type:'image',imageIndex:parseInt(el.querySelector('.block-image-index').value,10),caption:el.querySelector('.block-caption').value.trim()};
+  }).filter(b=>b.type==='text'?b.content:(Number.isInteger(b.imageIndex)&&b.imageIndex>=0));
+}
 
 async function submit(){
   const date=document.getElementById('m-date').value;
   const title=document.getElementById('m-title').value.trim();
-  const text=document.getElementById('m-text').value.trim();
   const imgs=document.getElementById('m-imgs').files;
+  const blocks=collectBlocks();
+  const text=blocks.filter(b=>b.type==='text').map(b=>b.content).join('\n\n');
   const msg=document.getElementById('m-msg');
-
-  if(!text&&imgs.length===0){msg.textContent='請填入說明或上傳圖片';msg.className='modal-msg err';return}
-
+  if(blocks.length===0){msg.textContent='請新增至少一個文字或圖片區塊';msg.className='modal-msg err';return}
   msg.textContent='上傳中，請稍候…';msg.className='modal-msg';
-
   const fd=new FormData();
   fd.append('index',STUDENT_INDEX);
   fd.append('date',date);
   fd.append('title',title);
   fd.append('text',text);
+  fd.append('blocks',JSON.stringify(blocks));
   for(let f of imgs) fd.append('images[]',f);
-
   try{
     const r=await fetch('add-entry.php',{method:'POST',body:fd});
     const res=await r.json();
-    if(res.success){
-      msg.textContent='新增成功！';msg.className='modal-msg ok';
-      setTimeout(()=>location.reload(),800);
-    }else{
-      msg.textContent=res.error||'發生錯誤';msg.className='modal-msg err';
-    }
-  }catch(e){
-    msg.textContent='網路錯誤，請稍後再試';msg.className='modal-msg err';
-  }
+    if(res.success){msg.textContent='新增成功！';msg.className='modal-msg ok';setTimeout(()=>location.reload(),800)}
+    else{msg.textContent=res.error||'發生錯誤';msg.className='modal-msg err'}
+  }catch(e){msg.textContent='網路錯誤，請稍後再試';msg.className='modal-msg err'}
 }
 
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});

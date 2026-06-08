@@ -11,6 +11,9 @@ $index = isset($_POST['index']) ? (int)$_POST['index'] : -1;
 $date  = isset($_POST['date'])  ? trim($_POST['date'])  : date('Y-m-d');
 $title = isset($_POST['title']) ? trim($_POST['title']) : '';
 $text  = isset($_POST['text'])  ? trim($_POST['text'])  : '';
+$blocksJson = isset($_POST['blocks']) ? $_POST['blocks'] : '';
+$blocks = json_decode($blocksJson, true);
+if (!is_array($blocks)) { $blocks = []; }
 
 if ($index < 0) {
     echo json_encode(['success' => false, 'error' => '無效索引']);
@@ -23,7 +26,7 @@ if (!$students || $index >= count($students)) {
     exit;
 }
 
-if (empty($text) && empty($_FILES['images']['name'][0])) {
+if (empty($text) && empty($blocks) && empty($_FILES['images']['name'][0])) {
     echo json_encode(['success' => false, 'error' => '請填入說明或上傳圖片']);
     exit;
 }
@@ -58,6 +61,52 @@ if (!empty($_FILES['images']['name'][0])) {
     }
 }
 
+// Build rich layout blocks. Blocks support text/image order and text size.
+$cleanBlocks = [];
+foreach ($blocks as $block) {
+    if (!is_array($block) || empty($block['type'])) continue;
+    if ($block['type'] === 'text') {
+        $content = trim((string)($block['content'] ?? ''));
+        if ($content === '') continue;
+        $size = (int)($block['size'] ?? 16);
+        if ($size < 12) $size = 12;
+        if ($size > 36) $size = 36;
+        $cleanBlocks[] = [
+            'type' => 'text',
+            'content' => htmlspecialchars($content, ENT_QUOTES, 'UTF-8'),
+            'size' => $size
+        ];
+    } elseif ($block['type'] === 'image') {
+        $imageIndex = (int)($block['imageIndex'] ?? -1);
+        if ($imageIndex >= 0 && isset($imageFiles[$imageIndex])) {
+            $caption = trim((string)($block['caption'] ?? ''));
+            $cleanBlocks[] = [
+                'type' => 'image',
+                'file' => $imageFiles[$imageIndex],
+                'caption' => htmlspecialchars($caption, ENT_QUOTES, 'UTF-8')
+            ];
+        }
+    }
+}
+
+// Backward-compatible fallback for old simple form data.
+if (empty($cleanBlocks)) {
+    if ($text !== '') {
+        $cleanBlocks[] = [
+            'type' => 'text',
+            'content' => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
+            'size' => 16
+        ];
+    }
+    foreach ($imageFiles as $file) {
+        $cleanBlocks[] = [
+            'type' => 'image',
+            'file' => $file,
+            'caption' => ''
+        ];
+    }
+}
+
 // Load and append to process data
 $pf = __DIR__ . '/process-' . $index . '.json';
 $entries = file_exists($pf) ? (json_decode(file_get_contents($pf), true) ?? []) : [];
@@ -67,6 +116,7 @@ $entries[] = [
     'title'      => htmlspecialchars($title, ENT_QUOTES, 'UTF-8'),
     'text'       => htmlspecialchars($text, ENT_QUOTES, 'UTF-8'),
     'images'     => $imageFiles,
+    'blocks'     => $cleanBlocks,
     'created_at' => date('Y-m-d H:i:s'),
 ];
 
