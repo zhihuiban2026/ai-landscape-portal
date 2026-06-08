@@ -42,8 +42,9 @@ async function callBalconyTool(need){
   return `陽台植栽 AI 即時回覆：\n推薦植物：\n${plants||'未取得植物清單'}\n\n專家診斷摘要：\n${report.slice(0,1200)}${report.length>1200?'…':''}`;
 }
 async function callTool(tool, need){
-  if(tool.id==='balcony-plant') return {status:'live', answer:await callBalconyTool(need)};
-  return {status:'adapter-ready', answer:localAnswer(tool, need)};
+  // Keep public Vercel endpoint stable: external live adapters are disabled until each tool API is confirmed serverless-safe.
+  // The real adapter function is kept above for local testing, but production returns a structured fallback instead of crashing.
+  return {status: tool.id==='balcony-plant' ? 'live-disabled-fallback' : 'adapter-ready', answer:localAnswer(tool, need)};
 }
 
 function integrate(need, mode, selected, answers){
@@ -52,7 +53,8 @@ function integrate(need, mode, selected, answers){
 }
 
 export default async function handler(req,res){
-  if(req.method!=='POST') return res.status(405).json({error:'Method not allowed'});
+  try{
+  if(req.method!=='POST') return res.status(405).json({success:false,error:'Method not allowed'});
   const { need='', mode='auto' } = req.body||{};
   const clean=String(need).trim();
   if(!clean) return res.status(400).json({error:'請輸入需求'});
@@ -68,6 +70,9 @@ export default async function handler(req,res){
     selectedTools:selected.map(({id,name,owner,url,score,prompt})=>({id,name,owner,url,score,prompt})),
     answers:answers.map(a=>({tool:a.tool.name,status:a.status,answer:a.answer})),
     finalAnswer:integrate(clean, mode, selected, answers),
-    note:'已開始接入真實工具回答：陽台植栽 AI 目前使用其 /api/diagnose 即時抓取；其他工具若無公開文字 API，暫以 adapter 回覆並保留工具連結。'
+    note:'目前以穩定整合模式運作：先完成多工具判斷、協作順序與整合答案；外部工具即時抓取會在確認各工具 API 穩定後逐一開啟，避免使用者看到整合失敗。'
   });
+  }catch(e){
+    return res.status(200).json({success:false,error:'未來事務所暫時無法整合：'+(e?.message||'unknown')});
+  }
 }
