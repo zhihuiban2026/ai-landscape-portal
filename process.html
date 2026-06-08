@@ -73,6 +73,9 @@ main{max-width:820px;margin:0 auto;padding:48px 24px 100px}
 .text-toolbar button:hover{background:var(--border)}
 .text-toolbar button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .text-toolbar .sep{width:1px;height:16px;background:var(--border);margin:0 4px}
+.size-slider-wrap{display:flex;align-items:center;gap:7px;margin-left:4px;font-size:.78rem;color:var(--muted)}
+.size-slider-wrap input[type=range]{width:120px;accent-color:var(--accent);cursor:pointer}
+.size-slider-val{min-width:38px;color:var(--accent);font-weight:500}
 .text-toolbar input[type=color]{width:26px;height:26px;border:1px solid var(--border);border-radius:5px;cursor:pointer;padding:2px;background:#fff}
 .color-presets{display:flex;gap:3px;align-items:center}
 .color-dot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
@@ -268,9 +271,11 @@ function makeBlockEl(block, i) {
       <div class="text-toolbar">
         <button onmousedown="event.preventDefault()" onclick="fmt('bold',${i})" title="粗體"><b>B</b></button>
         <div class="sep"></div>
-        <button onmousedown="event.preventDefault()" onclick="fmtSize('1.25em',${i})">大</button>
-        <button onmousedown="event.preventDefault()" onclick="fmtSize('1em',${i})">中</button>
-        <button onmousedown="event.preventDefault()" onclick="fmtSize('.8em',${i})">小</button>
+        <div class="size-slider-wrap" onmousedown="event.preventDefault()">
+          <span>字級</span>
+          <input type="range" min="12" max="36" value="16" oninput="previewSize(this)" onchange="fmtSize(this.value+'px',${i})">
+          <span class="size-slider-val">16px</span>
+        </div>
         <div class="sep"></div>
         <div class="color-presets">
           <div class="color-dot" style="background:#1c1c1c" onmousedown="event.preventDefault()" onclick="fmtColor('#1c1c1c',${i})" title="黑"></div>
@@ -388,6 +393,10 @@ function fmt(cmd, i) {
   document.execCommand(cmd, false, null);
   const ed = document.getElementById('re-' + i);
   if (ed) blocks[i].content = ed.innerHTML;
+}
+function previewSize(input) {
+  const val = input.parentElement.querySelector('.size-slider-val');
+  if (val) val.textContent = input.value + 'px';
 }
 function fmtSize(size, i) {
   document.execCommand('fontSize', false, '7');
