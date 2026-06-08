@@ -2,11 +2,11 @@
   "blocks": [
     {
       "type": "text",
-      "content": "<span style=\"font-size: 1.25em;\">早安</span>"
+      "content": "<span style=\"font-family: 微軟正黑體; font-weight: bold; text-align: justify; color: black;\"><span style=\"font-size: 1.25em;\">研究動機</span></span><div><p style=\"language:zh-TW;line-height:150%;margin-top:6.0pt;margin-bottom:0pt;\nmargin-left:0in;text-align:justify;text-justify:inter-ideograph;direction:ltr;\nunicode-bidi:embed;mso-line-break-override:none;word-break:normal;punctuation-wrap:\nhanging\"><span style=\"font-family: 微軟正黑體; color: black; font-weight: bold;\"><span style=\"font-size: 1em;\">設計決策中的「斷裂感」</span></span></p><p style=\"language:zh-TW;line-height:150%;margin-top:6.0pt;margin-bottom:0pt;\nmargin-left:0in;text-align:justify;text-justify:inter-ideograph;direction:ltr;\nunicode-bidi:embed;mso-line-break-override:none;word-break:normal;punctuation-wrap:\nhanging\"><span style=\"font-size: 0.8em;\"><span style=\"font-family: 微軟正黑體; color: black;\">在當代參數化與\n</span><span style=\"font-family: 微軟正黑體; color: black;\">AI </span><span style=\"font-family: 微軟正黑體; color: black;\">輔助設計的工作流程中，設計決策常面臨一種核心焦慮：「理性的斷裂」。現有的運作模式多半為「設定基礎參數\n→ 演算法隨機生成 → 憑直覺挑選 → 事後賦予解釋」。在生成階段，</span><span style=\"font-family: 微軟正黑體; color: black;\">AI </span><span style=\"font-family: 微軟正黑體; color: black;\">的邏輯是數學化且顯性的；然而在最終挑選階段，決策權卻瞬間退回設計師不可言說的感性直覺。</span></span></p><p style=\"language:zh-TW;line-height:150%;margin-top:6.0pt;margin-bottom:0pt;\nmargin-left:0in;text-align:justify;text-justify:inter-ideograph;direction:ltr;\nunicode-bidi:embed;mso-line-break-override:none;word-break:normal;punctuation-wrap:\nhanging\">\n\n</p><p style=\"language:zh-TW;line-height:150%;margin-top:6.0pt;margin-bottom:0pt;\nmargin-left:0in;text-align:justify;text-justify:inter-ideograph;direction:ltr;\nunicode-bidi:embed;mso-line-break-override:none;word-break:normal;punctuation-wrap:\nhanging\"><span style=\"font-size: 0.8em;\"><span style=\"font-family: 微軟正黑體; color: black;\">我希望能彌合這段從「演算法白箱」跳回「直覺黑箱」的斷層。如果「直覺」不僅僅是隨機的喜好，而是某種尚未被編碼的「隱性知識」，我的研究期望透過建構一套動態互動網站，將\n</span><span style=\"font-family: 微軟正黑體; color: black;\">AI </span><span style=\"font-family: 微軟正黑體; color: black;\">作為轉譯中介，把隱晦的美學感知與空間經驗，逆向工程轉化為可被運算、比對與編輯的「顯性規則」。最終使設計決策不再是不可追溯的感性選擇，而是一條連續且可學習的決策鏈。</span></span></p></div>"
     },
     {
       "type": "text",
-      "content": "午安"
+      "content": "<span style=\"font-size: xxx-large; font-weight: bold; color: rgb(58, 90, 64);\">網站架構</span>"
     },
     {
       "type": "image",
