@@ -32,12 +32,13 @@ async function callBalconyTool(need){
   };
   const r=await fetch('https://balcony-plant-ai.vercel.app/api/diagnose',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   if(!r.ok) throw new Error('陽台植栽工具回應失敗 '+r.status);
-  const raw=await r.text();
+  const buf=await r.arrayBuffer();
+  const raw=new TextDecoder('utf-8').decode(buf);
   const events=raw.split('\n\n').filter(x=>x.startsWith('data: ')).map(x=>{try{return JSON.parse(x.slice(6))}catch{return null}}).filter(Boolean);
   const result=[...events].reverse().find(e=>e.event==='result') || events.find(e=>e.diagnosis);
   if(!result) return raw.slice(0,1800);
-  const plants=(result.recommendedPlants||[]).slice(0,3).map(p=>`${p.name||''}：${p.matchReason||p.description||''}`).join('\n');
-  const report=result.diagnosis?.expertReport||result.expertReport||'';
+  const plants=(result.recommendedPlants||result.plants||[]).slice(0,3).map(p=>`${p.name||''}：${p.matchReason||p.description||''}`).join('\n');
+  const report=result.diagnosis?.expertReport||result.expertReport||result.diagnosis?.summary||'';
   return `陽台植栽 AI 即時回覆：\n推薦植物：\n${plants||'未取得植物清單'}\n\n專家診斷摘要：\n${report.slice(0,1200)}${report.length>1200?'…':''}`;
 }
 async function callTool(tool, need){

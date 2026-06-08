@@ -380,8 +380,10 @@ async function runFutureOffice(){
   title.textContent='未來事務所整合中'; meta.textContent='正在判斷工具組合與建立整合答案'; reason.textContent=''; links.innerHTML=''; answer.style.display='none';
   try{
     const r=await fetch('/api/future-office',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({need,mode})});
-    const res=await r.json();
-    if(!res.success) throw new Error(res.error||'整合失敗');
+    const raw=await r.text();
+    let res;
+    try{res=JSON.parse(raw)}catch{throw new Error(raw.slice(0,160)||'API 沒有回傳 JSON，請稍後再試')}
+    if(!r.ok||!res.success) throw new Error(res.error||'整合失敗');
     title.textContent='未來事務所整合答案';
     meta.textContent='使用工具：'+res.selectedTools.map(t=>t.name+'（'+t.owner+'）').join('、');
     reason.textContent=res.note||'';
