@@ -2,6 +2,9 @@
   "functions": {
     "api/save-process.js": {
       "maxDuration": 30
+    },
+    "api/future-office.js": {
+      "maxDuration": 60
     }
   }
 }

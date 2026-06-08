@@ -24,6 +24,27 @@ function localAnswer(tool, need){
   }[tool.id]||[];
   return `${tool.name} 初步回覆：\n${lines.map((l,i)=>`${i+1}. ${l}`).join('\n')}\n針對本案「${need.slice(0,80)}${need.length>80?'…':''}」，建議先用此工具取得更細部的專業輸出。`;
 }
+
+async function callBalconyTool(need){
+  const payload={
+    physicalParams:{orientation:'south',floor:5,currentFloor:5,balconyDepth:120,balconyWidth:300,city:'台北市'},
+    inputMode:'MODE_1_PEDESTRIAN'
+  };
+  const r=await fetch('https://balcony-plant-ai.vercel.app/api/diagnose',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(!r.ok) throw new Error('陽台植栽工具回應失敗 '+r.status);
+  const raw=await r.text();
+  const events=raw.split('\n\n').filter(x=>x.startsWith('data: ')).map(x=>{try{return JSON.parse(x.slice(6))}catch{return null}}).filter(Boolean);
+  const result=[...events].reverse().find(e=>e.event==='result') || events.find(e=>e.diagnosis);
+  if(!result) return raw.slice(0,1800);
+  const plants=(result.recommendedPlants||[]).slice(0,3).map(p=>`${p.name||''}：${p.matchReason||p.description||''}`).join('\n');
+  const report=result.diagnosis?.expertReport||result.expertReport||'';
+  return `陽台植栽 AI 即時回覆：\n推薦植物：\n${plants||'未取得植物清單'}\n\n專家診斷摘要：\n${report.slice(0,1200)}${report.length>1200?'…':''}`;
+}
+async function callTool(tool, need){
+  if(tool.id==='balcony-plant') return {status:'live', answer:await callBalconyTool(need)};
+  return {status:'adapter-ready', answer:localAnswer(tool, need)};
+}
+
 function integrate(need, mode, selected, answers){
   const modeLine=mode==='teaching'?'以下用教學模式，先說明原因再給步驟。':mode==='company'?'以下用公司模式，聚焦可執行策略與交付成果。':'以下採自動整合模式，兼顧專業建議與操作順序。';
   return `${modeLine}\n\n整合結論：此需求需要 ${selected.map(t=>t.name).join('、')} 協作。建議先釐清基地/空間條件，再分別取得植栽、空間、恢復性或景觀策略，最後整合成一份設計方案。\n\n建議流程：\n${selected.map((t,i)=>`${i+1}. 使用「${t.name}」：${t.prompt}`).join('\n')}\n\n最終建議：\n- 先整理需求條件：地點、尺度、日照、使用者、預算與維護能力。\n- 依上方工具順序取得專項答案。\n- 比對各工具建議是否衝突，例如植物需求與空間限制、療癒目標與維護成本。\n- 將共同指向的策略列為優先方案，衝突處保留為設計選項。\n\n各工具回覆摘要：\n${answers.map(a=>`\n【${a.tool.name}】\n${a.answer}`).join('\n')}`;
@@ -35,15 +56,17 @@ export default async function handler(req,res){
   const clean=String(need).trim();
   if(!clean) return res.status(400).json({error:'請輸入需求'});
   const selected=pickTools(clean);
-  // Phase 1 backend contract: adapters are explicit and ready for real tool/API/browser connectors.
-  // Until each student tool exposes a stable API endpoint, return deterministic adapter outputs and links.
-  const answers=selected.map(tool=>({tool, status:'adapter-ready', answer:localAnswer(tool, clean)}));
+  const settled=await Promise.all(selected.map(async tool=>{
+    try{const out=await callTool(tool, clean);return {tool, ...out};}
+    catch(e){return {tool, status:'error-fallback', answer:localAnswer(tool, clean)+'\n\n（即時抓取失敗：'+(e?.message||'unknown')+'）'};}
+  }));
+  const answers=settled;
   return res.status(200).json({
     success:true,
     mode,
     selectedTools:selected.map(({id,name,owner,url,score,prompt})=>({id,name,owner,url,score,prompt})),
     answers:answers.map(a=>({tool:a.tool.name,status:a.status,answer:a.answer})),
     finalAnswer:integrate(clean, mode, selected, answers),
-    note:'目前已建立未來事務所後端整合流程與工具 adapter。若各研究工具提供 API endpoint，即可把 adapter-ready 替換為即時抓取工具回答。'
+    note:'已開始接入真實工具回答：陽台植栽 AI 目前使用其 /api/diagnose 即時抓取；其他工具若無公開文字 API，暫以 adapter 回覆並保留工具連結。'
   });
 }
