@@ -411,15 +411,36 @@ function fmtSize(size, i) {
   if (!ed) return;
   ed.focus();
   restoreSelection();
-  document.execCommand('fontSize', false, '7');
-  ed.querySelectorAll('font[size="7"]').forEach(f => {
-    const sp = document.createElement('span');
-    sp.style.fontSize = size;
-    sp.innerHTML = f.innerHTML;
-    f.replaceWith(sp);
-  });
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed || !ed.contains(sel.anchorNode)) return;
+  const range = sel.getRangeAt(0);
+  const span = document.createElement('span');
+  span.style.fontSize = size;
+  try {
+    const frag = range.extractContents();
+    span.appendChild(frag);
+    range.insertNode(span);
+    // Remove nested font-size spans created by previous slider uses, keeping the new outer size.
+    span.querySelectorAll('span[style*="font-size"]').forEach(inner => {
+      inner.style.fontSize = '';
+      if (!inner.getAttribute('style')) inner.removeAttribute('style');
+    });
+    sel.removeAllRanges();
+    const nr = document.createRange();
+    nr.selectNodeContents(span);
+    sel.addRange(nr);
+    _savedRange = nr.cloneRange();
+  } catch (e) {
+    document.execCommand('fontSize', false, '7');
+    ed.querySelectorAll('font[size="7"]').forEach(f => {
+      const sp = document.createElement('span');
+      sp.style.fontSize = size;
+      sp.innerHTML = f.innerHTML;
+      f.replaceWith(sp);
+    });
+    saveSelection(i);
+  }
   blocks[i].content = ed.innerHTML;
-  saveSelection(i);
 }
 function fmtColor(color, i) {
   const ed = document.getElementById('re-' + i);
