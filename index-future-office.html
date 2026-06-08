@@ -239,8 +239,10 @@ footer{
 .result-title{font-family:'Noto Serif TC',serif;font-size:1.05rem;margin-bottom:6px;}
 .result-meta{font-size:.8rem;color:var(--muted);line-height:1.7;margin-bottom:14px;}
 .result-reason{font-size:.88rem;color:var(--muted);line-height:1.8;margin-bottom:14px;}
-.result-link{display:inline-block;text-decoration:none;background:var(--accent);color:#fff;border-radius:8px;padding:10px 15px;font-size:.84rem;}
+.result-link{display:inline-block;text-decoration:none;background:var(--accent);color:#fff;border-radius:8px;padding:10px 15px;font-size:.84rem;margin:4px 6px 0 0;}
 .result-link:hover{background:#2d4831;}
+.result-answer{white-space:pre-wrap;background:#fafaf8;border:1px solid var(--border);border-radius:10px;padding:14px 15px;font-size:.86rem;line-height:1.85;color:#444;margin-top:12px;}
+.tool-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
 @media(max-width:900px){.office{grid-template-columns:1fr;}}
 @media(max-width:540px){.office{padding:26px;}.office-actions{flex-direction:column;}}
 
@@ -259,9 +261,9 @@ footer{
   
 <section class="office" aria-label="未來事務所">
   <div class="office-copy">
-    <div class="office-kicker">Future Office · AI Router</div>
+    <div class="office-kicker">Future Office · AI Orchestrator</div>
     <h2>未來事務所</h2>
-    <p>不知道該使用哪一個 AI 工具嗎？請輸入你的景觀、建築、植栽或環境問題。未來事務所會先依照需求內容，協助判斷最適合的研究工具與使用方向。</p>
+    <p>請輸入你的景觀、建築、植栽或環境問題。未來事務所會判斷需要哪些研究 AI，建立工具協作流程，抓取或整理各工具回覆，最後整合成一份完整答案。</p>
     <div class="office-tags">
       <span class="tag">景觀設計</span><span class="tag">建築空間</span><span class="tag">原生植物</span><span class="tag">陽台植栽</span><span class="tag">恢復性環境</span>
     </div>
@@ -271,8 +273,8 @@ footer{
     <select id="mode"><option value="auto">自動判斷</option><option value="company">公司模式：專業建議</option><option value="teaching">教學模式：引導理解</option></select>
     <label for="need">你的需求</label>
     <textarea id="need" placeholder="例如：我想改善家中陽台植栽，但日照不足；或我想把小坪數住宅需求轉成空間設計參數。"></textarea>
-    <div class="office-actions"><button class="btn-main" onclick="recommendTool()">推薦 AI 工具</button><button class="btn-ghost" onclick="clearNeed()">清除</button></div>
-    <div class="result" id="result"><div class="result-title" id="resultTitle"></div><div class="result-meta" id="resultMeta"></div><div class="result-reason" id="resultReason"></div><a class="result-link" id="resultLink" href="#" target="_blank" rel="noopener">前往工具 →</a></div>
+    <div class="office-actions"><button class="btn-main" id="officeBtn" onclick="runFutureOffice()">啟動未來事務所</button><button class="btn-ghost" onclick="clearNeed()">清除</button></div>
+    <div class="result" id="result"><div class="result-title" id="resultTitle"></div><div class="result-meta" id="resultMeta"></div><div class="result-reason" id="resultReason"></div><div class="tool-list" id="toolLinks"></div><div class="result-answer" id="finalAnswer" style="display:none"></div></div>
   </div>
 </section>
 
@@ -370,24 +372,24 @@ async function save(){
 
 
 
-const officeTools = [
-  {name:'NativePlantAI',owner:'蘇芸德',url:'https://nativeplantai6.netlify.app/',keywords:['piet','自然種植','原生植物','台灣原生','台灣中部','大安溪','濁水溪','植栽替代','景觀植物','植栽設計','選種','多年生','宿根'],reason:'你的需求與 Piet 自然種植法、台灣中部原生植物或植栽選種有關，適合使用 NativePlantAI。'},
-  {name:'AI 套房空間設計遊戲',owner:'王澄音',url:'https://studio-apartment-game.vercel.app/',keywords:['建築','空間','室內','平面','配置','格局','住宅','套房','小坪數','設計參數','需求轉譯','動線','坪數'],reason:'你的需求與建築空間、室內配置或設計參數轉譯有關，適合使用空間設計轉譯工具。'},
-  {name:'陽台植栽 AI 診斷機器人',owner:'曾宇凱',url:'https://balcony-plant-ai.vercel.app/',keywords:['陽台','盆栽','植物照顧','植物診斷','病蟲害','澆水','日照','通風','植栽養護','花園','植栽推薦'],reason:'你的需求與陽台植栽、盆栽養護、日照通風或植物診斷有關，適合使用陽台植栽 AI。'},
-  {name:'恢復性環境評估與改善機器人',owner:'莊旻栩',url:'https://restorative-env-ai.vercel.app/',keywords:['恢復性','art','注意力恢復','療癒','壓力','放鬆','環境評估','場域','自然感','心理恢復'],reason:'你的需求與注意力恢復理論、療癒性景觀或環境恢復性評估有關，適合使用恢復性環境評估工具。'},
-  {name:'AI 景觀設計研究',owner:'陳芅睿',url:'https://landscape-mci8.onrender.com/',keywords:['景觀設計','景觀分析','場地規劃','基地分析','景觀研究'],reason:'你的需求與景觀設計、基地分析或場地規劃有關，適合使用 AI 景觀設計研究工具。'}
-];
-function recommendTool(){
-  const needEl=document.getElementById('need'),modeEl=document.getElementById('mode'),result=document.getElementById('result'),title=document.getElementById('resultTitle'),meta=document.getElementById('resultMeta'),reason=document.getElementById('resultReason'),link=document.getElementById('resultLink');
-  const text=(needEl.value||'').trim().toLowerCase(); const mode=modeEl.value;
-  if(!text){title.textContent='請先輸入需求';meta.textContent='';reason.textContent='請簡單描述你的景觀、建築、植栽或環境問題，未來事務所才能協助推薦工具。';link.style.display='none';result.classList.add('open');return;}
-  let best=null,bestScore=0;
-  officeTools.forEach(tool=>{let score=0;tool.keywords.forEach(k=>{if(text.includes(k.toLowerCase()))score++});if(score>bestScore){bestScore=score;best=tool}});
-  if(!best){best=officeTools[4];bestScore=0;}
-  const modeText={auto:'自動判斷',company:'公司模式：偏向專業建議與實務應用',teaching:'教學模式：偏向引導理解與學習'}[mode]||'自動判斷';
-  title.textContent='推薦工具：'+best.name; meta.textContent='研究者：'+best.owner+'｜回應模式：'+modeText;
-  reason.textContent=bestScore>0?best.reason:'目前沒有完全吻合的關鍵字，因此先推薦較通用的景觀設計研究工具。若不確定，也可以回到研究成果卡片逐一查看。';
-  link.href=best.url; link.style.display='inline-block'; result.classList.add('open');
+async function runFutureOffice(){
+  const needEl=document.getElementById('need'),modeEl=document.getElementById('mode'),result=document.getElementById('result'),title=document.getElementById('resultTitle'),meta=document.getElementById('resultMeta'),reason=document.getElementById('resultReason'),links=document.getElementById('toolLinks'),answer=document.getElementById('finalAnswer'),btn=document.getElementById('officeBtn');
+  const need=(needEl.value||'').trim(), mode=modeEl.value;
+  if(!need){title.textContent='請先輸入需求';meta.textContent='';reason.textContent='請描述你的景觀、建築、植栽或環境問題，未來事務所才能協助整合。';links.innerHTML='';answer.style.display='none';result.classList.add('open');return;}
+  btn.disabled=true; btn.textContent='整合中…'; result.classList.add('open');
+  title.textContent='未來事務所整合中'; meta.textContent='正在判斷工具組合與建立整合答案'; reason.textContent=''; links.innerHTML=''; answer.style.display='none';
+  try{
+    const r=await fetch('/api/future-office',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({need,mode})});
+    const res=await r.json();
+    if(!res.success) throw new Error(res.error||'整合失敗');
+    title.textContent='未來事務所整合答案';
+    meta.textContent='使用工具：'+res.selectedTools.map(t=>t.name+'（'+t.owner+'）').join('、');
+    reason.textContent=res.note||'';
+    links.innerHTML=res.selectedTools.map(t=>`<a class="result-link" href="${t.url}" target="_blank" rel="noopener">開啟 ${t.name} →</a>`).join('');
+    answer.textContent=res.finalAnswer;
+    answer.style.display='block';
+  }catch(e){title.textContent='整合失敗';meta.textContent='';reason.textContent=e.message||'請稍後再試';links.innerHTML='';answer.style.display='none';}
+  finally{btn.disabled=false;btn.textContent='啟動未來事務所';}
 }
 function clearNeed(){document.getElementById('need').value='';document.getElementById('result').classList.remove('open');}
 
