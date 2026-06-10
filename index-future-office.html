@@ -243,6 +243,7 @@ footer{
 .result-link:hover{background:#2d4831;}
 .result-answer{white-space:pre-wrap;background:#fafaf8;border:1px solid var(--border);border-radius:10px;padding:14px 15px;font-size:.86rem;line-height:1.85;color:#444;margin-top:12px;}
 .tool-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.progress-list{margin:12px 0 0 18px;color:var(--muted);font-size:.84rem;line-height:1.8}.progress-list li.active{color:var(--accent);font-weight:500}.progress-list li.done{color:#466b4d}
 @media(max-width:900px){.office{grid-template-columns:1fr;}}
 @media(max-width:540px){.office{padding:26px;}.office-actions{flex-direction:column;}}
 
@@ -274,7 +275,7 @@ footer{
     <label for="need">你的需求</label>
     <textarea id="need" placeholder="例如：我想改善家中陽台植栽，但日照不足；或我想把小坪數住宅需求轉成空間設計參數。"></textarea>
     <div class="office-actions"><button class="btn-main" id="officeBtn" onclick="runFutureOffice()">啟動未來事務所</button><button class="btn-ghost" onclick="clearNeed()">清除</button></div>
-    <div class="result" id="result"><div class="result-title" id="resultTitle"></div><div class="result-meta" id="resultMeta"></div><div class="result-reason" id="resultReason"></div><div class="tool-list" id="toolLinks"></div><div class="result-answer" id="finalAnswer" style="display:none"></div></div>
+    <div class="result" id="result"><div class="result-title" id="resultTitle"></div><div class="result-meta" id="resultMeta"></div><div class="result-reason" id="resultReason"></div><ol class="progress-list" id="progressList"></ol><div class="tool-list" id="toolLinks"></div><div class="result-answer" id="finalAnswer" style="display:none"></div></div>
   </div>
 </section>
 
@@ -372,28 +373,46 @@ async function save(){
 
 
 
+let futureOfficePoll=null;
 async function runFutureOffice(){
-  const needEl=document.getElementById('need'),modeEl=document.getElementById('mode'),result=document.getElementById('result'),title=document.getElementById('resultTitle'),meta=document.getElementById('resultMeta'),reason=document.getElementById('resultReason'),links=document.getElementById('toolLinks'),answer=document.getElementById('finalAnswer'),btn=document.getElementById('officeBtn');
+  const needEl=document.getElementById('need'),modeEl=document.getElementById('mode'),result=document.getElementById('result'),title=document.getElementById('resultTitle'),meta=document.getElementById('resultMeta'),reason=document.getElementById('resultReason'),links=document.getElementById('toolLinks'),answer=document.getElementById('finalAnswer'),btn=document.getElementById('officeBtn'),progress=document.getElementById('progressList');
   const need=(needEl.value||'').trim(), mode=modeEl.value;
-  if(!need){title.textContent='請先輸入需求';meta.textContent='';reason.textContent='請描述你的景觀、建築、植栽或環境問題，未來事務所才能協助整合。';links.innerHTML='';answer.style.display='none';result.classList.add('open');return;}
-  btn.disabled=true; btn.textContent='整合中…'; result.classList.add('open');
-  title.textContent='未來事務所整合中'; meta.textContent='正在判斷工具組合與建立整合答案'; reason.textContent=''; links.innerHTML=''; answer.style.display='none';
+  if(!need){title.textContent='請先輸入需求';meta.textContent='';reason.textContent='請描述你的景觀、建築、植栽或環境問題，未來事務所才能協助整合。';links.innerHTML='';progress.innerHTML='';answer.style.display='none';result.classList.add('open');return;}
+  clearInterval(futureOfficePoll);
+  btn.disabled=true; btn.textContent='任務建立中…'; result.classList.add('open');
+  title.textContent='未來事務所任務建立中'; meta.textContent='準備以非同步方式操作與整合工具'; reason.textContent=''; links.innerHTML=''; progress.innerHTML=''; answer.style.display='none';
   try{
-    const r=await fetch('/api/future-office',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({need,mode})});
-    const raw=await r.text();
-    let res;
-    try{res=JSON.parse(raw)}catch{throw new Error(raw.slice(0,160)||'API 沒有回傳 JSON，請稍後再試')}
-    if(!r.ok||!res.success) throw new Error(res.error||'整合失敗');
+    const r=await fetch('/api/future-office/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({need,mode})});
+    const started=await r.json();
+    if(!r.ok||!started.success) throw new Error(started.error||'任務建立失敗');
+    title.textContent='未來事務所執行中';
+    meta.textContent='任務 ID：'+started.jobId.slice(0,12)+'…｜工具：'+started.selectedTools.map(t=>t.name).join('、');
+    links.innerHTML=started.selectedTools.map(t=>`<a class="result-link" href="${t.url}" target="_blank" rel="noopener">開啟 ${t.name} →</a>`).join('');
+    await pollFutureOffice(started.jobId);
+    futureOfficePoll=setInterval(()=>pollFutureOffice(started.jobId),1800);
+  }catch(e){title.textContent='任務建立失敗';meta.textContent='';reason.textContent=e.message||'請稍後再試';links.innerHTML='';progress.innerHTML='';answer.style.display='none';btn.disabled=false;btn.textContent='啟動未來事務所';}
+}
+async function pollFutureOffice(jobId){
+  const title=document.getElementById('resultTitle'),meta=document.getElementById('resultMeta'),reason=document.getElementById('resultReason'),links=document.getElementById('toolLinks'),answer=document.getElementById('finalAnswer'),btn=document.getElementById('officeBtn'),progress=document.getElementById('progressList');
+  const r=await fetch('/api/future-office/status?id='+encodeURIComponent(jobId));
+  const res=await r.json();
+  if(!res.success) throw new Error(res.error||'任務查詢失敗');
+  progress.innerHTML=res.steps.map((s,i)=>`<li class="${i<res.step?'done':i===res.step?'active':''}">${s}</li>`).join('');
+  reason.textContent=res.note||'';
+  if(res.status==='done'){
+    clearInterval(futureOfficePoll);
     title.textContent='未來事務所整合答案';
     meta.textContent='使用工具：'+res.selectedTools.map(t=>t.name+'（'+t.owner+'）').join('、');
-    reason.textContent=res.note||'';
     links.innerHTML=res.selectedTools.map(t=>`<a class="result-link" href="${t.url}" target="_blank" rel="noopener">開啟 ${t.name} →</a>`).join('');
     answer.textContent=res.finalAnswer;
     answer.style.display='block';
-  }catch(e){title.textContent='整合失敗';meta.textContent='';reason.textContent=e.message||'請稍後再試';links.innerHTML='';answer.style.display='none';}
-  finally{btn.disabled=false;btn.textContent='啟動未來事務所';}
+    btn.disabled=false;btn.textContent='啟動未來事務所';
+  }else{
+    title.textContent='未來事務所執行中';
+    meta.textContent=res.message;
+  }
 }
-function clearNeed(){document.getElementById('need').value='';document.getElementById('result').classList.remove('open');}
+function clearNeed(){clearInterval(futureOfficePoll);document.getElementById('need').value='';document.getElementById('result').classList.remove('open');document.getElementById('officeBtn').disabled=false;document.getElementById('officeBtn').textContent='啟動未來事務所';}
 
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
 init();
