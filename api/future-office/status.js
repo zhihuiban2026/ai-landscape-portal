@@ -7,8 +7,8 @@ export default async function handler(req,res){
   const age=Date.now()-(job.ts||Date.now());
   const shouldCollect=age>3*1800;
   const result=shouldCollect?await buildResultWithLive(job.need,job.mode||'auto'):buildResult(job.need,job.mode||'auto');
-  const steps=['建立任務','判斷需要的研究 AI','準備操作工具網站','收集工具回覆','整合最終答案'];
+  const steps=['閱讀問題','比對關鍵字','計算推薦分數','排序候選工具','產生推薦理由'];
   const step=Math.min(steps.length-1,Math.floor(age/1800));
   const done=age>steps.length*1800;
-  return res.status(200).json({success:true,jobId:req.query.id,status:done?'done':'running',step,steps,message:done?'整合完成':steps[step],...result,note:shouldCollect?'已進入實際工具收集階段：陽台植栽 AI 會嘗試即時抓取；其他工具等待後續 worker adapter。':'任務正在排程與準備工具操作。'});
+  return res.status(200).json({success:true,jobId:req.query.id,status:done?'done':'running',step,steps,message:done?'整合完成':steps[step],...result,note:'目前為強化版 AI 推薦機器人：依關鍵字、同義詞與問題情境推薦最適合的研究工具，不自動操作外部網站。'});
 }
