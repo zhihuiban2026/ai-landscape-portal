@@ -28,9 +28,8 @@ export function recommend(need, mode='auto'){
   const selected=ranked.filter(t=>t.score>0).slice(0,3);
   if(!selected.length) selected.push(ranked.find(t=>t.id==='landscape-design'));
   const primary=selected[0];
-  const modeText=mode==='company'?'公司模式：偏向專業建議與實務應用':mode==='teaching'?'教學模式：偏向引導理解與學習':'自動判斷';
   const steps=selected.map((t,i)=>`${i+1}. ${t.name}：${t.prompt}${t.hits?.length?`\n   命中關鍵字：${t.hits.join('、')}`:''}`).join('\n');
-  const finalAnswer=`推薦主工具：${primary.name}\n研究者：${primary.owner}\n回應模式：${modeText}\n\n為什麼推薦：\n你的問題中出現或隱含了「${primary.hits?.slice(0,6).join('、')||'景觀/空間設計'}」等線索，因此最適合先使用 ${primary.name}。\n\n建議使用順序：\n${steps}\n\n使用方式：\n- 如果只想快速得到答案，先點主工具。\n- 如果問題跨領域，依上方順序逐一使用工具，再把各工具答案合併判斷。\n- 若推薦結果不符合期待，請補充基地位置、空間類型、日照、使用者需求或是否有圖片。`;
+  const finalAnswer=`推薦主工具：${primary.name}\n研究者：${primary.owner}\n\n為什麼推薦：\n你的問題中出現或隱含了「${primary.hits?.slice(0,6).join('、')||'景觀/空間設計'}」等線索，因此最適合先使用 ${primary.name}。\n\n建議使用順序：\n${steps}\n\n使用方式：\n- 如果只想快速得到答案，先點主工具。\n- 如果問題跨領域，依上方順序逐一使用工具，再把各工具答案合併判斷。\n- 若推薦結果不符合期待，請補充基地位置、空間類型、日照、使用者需求或是否有圖片。`;
   return {selectedTools:selected.map(({id,name,owner,url,score,prompt,hits,domains})=>({id,name,owner,url,score,prompt,hits,domains})),primary:{id:primary.id,name:primary.name,owner:primary.owner,url:primary.url},finalAnswer,note:'目前為強化版 AI 推薦機器人：依關鍵字、同義詞與問題情境推薦最適合的研究工具，不自動操作外部網站。'};
 }
 export function buildResult(need, mode='auto'){return recommend(need,mode)}
