@@ -42,11 +42,22 @@ export async function callBalconyToolLive(){
     if(!r.ok) throw new Error('HTTP '+r.status);
     const raw=new TextDecoder('utf-8').decode(await r.arrayBuffer());
     const events=raw.split('\n\n').filter(x=>x.startsWith('data: ')).map(x=>{try{return JSON.parse(x.slice(6))}catch{return null}}).filter(Boolean);
-    const result=[...events].reverse().find(e=>e.event==='result')||events.find(e=>e.diagnosis)||{};
+    const err=[...events].reverse().find(e=>e.event==='error'||e.success===false);
+    if(err) throw new Error(err.error||'工具回傳錯誤');
+    const result=[...events].reverse().find(e=>e.event==='result'||e.diagnosis);
+    if(!result) throw new Error('工具尚未回傳完整診斷結果');
     const plants=(result.recommendedPlants||result.plants||[]).slice(0,3).map(p=>`${p.name||''}：${p.matchReason||p.description||''}`).filter(Boolean).join('\n');
-    const report=result.diagnosis?.expertReport||result.expertReport||result.diagnosis?.summary||raw;
+    const report=result.diagnosis?.expertReport||result.expertReport||result.diagnosis?.summary||'';
+    if(!plants&&!report) throw new Error('工具回傳格式不含可用摘要');
     return `陽台植栽 AI 即時抓取結果：\n推薦植物：\n${plants||'工具未回傳明確植物清單'}\n\n診斷摘要：\n${String(report).slice(0,1200)}${String(report).length>1200?'…':''}`;
   }finally{clearTimeout(timeout)}
+}
+function cleanToolError(e){
+  const msg=String(e?.message||e?.name||'unknown');
+  if(e?.name==='AbortError'||msg.includes('timeout')) return '工具回應逾時';
+  if(msg.includes('rate_limit')||msg.includes('429')||msg.includes('rate limit')) return '外部 AI 工具目前達到用量限制';
+  if(msg.length>80) return msg.slice(0,80)+'…';
+  return msg;
 }
 export async function buildResultWithLive(need, mode='auto'){
   const selected=pickTools(need);
@@ -54,7 +65,7 @@ export async function buildResultWithLive(need, mode='auto'){
   for(const tool of selected){
     if(tool.id==='balcony-plant'){
       try{answers.push({tool,status:'live',answer:await callBalconyToolLive()});}
-      catch(e){answers.push({tool,status:'live-timeout-fallback',answer:localAnswer(tool,need)+`\n\n（即時操作陽台植栽 AI 逾時或失敗：${e?.name==='AbortError'?'timeout':e?.message||'unknown'}）`});}
+      catch(e){answers.push({tool,status:'live-timeout-fallback',answer:localAnswer(tool,need)+`\n\n（即時操作陽台植栽 AI 未完成：${cleanToolError(e)}）`});}
     }else{
       answers.push({tool,status:'worker-pending',answer:localAnswer(tool,need)});
     }
