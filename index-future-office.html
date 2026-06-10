@@ -241,9 +241,10 @@ footer{
 .result-reason{font-size:.88rem;color:var(--muted);line-height:1.8;margin-bottom:14px;}
 .result-link{display:inline-block;text-decoration:none;background:var(--accent);color:#fff;border-radius:8px;padding:10px 15px;font-size:.84rem;margin:4px 6px 0 0;}
 .result-link:hover{background:#2d4831;}
-.result-answer{white-space:pre-wrap;background:#fafaf8;border:1px solid var(--border);border-radius:10px;padding:14px 15px;font-size:.86rem;line-height:1.85;color:#444;margin-top:12px;}
-.tool-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
-.progress-list{margin:12px 0 0 18px;color:var(--muted);font-size:.84rem;line-height:1.8}.progress-list li.active{color:var(--accent);font-weight:500}.progress-list li.done{color:#466b4d}.adapter-list{display:grid;gap:8px;margin-top:12px}.adapter-item{border:1px solid var(--border);border-radius:9px;background:#fff;padding:9px 11px;font-size:.8rem;line-height:1.55;color:#555}.adapter-item b{color:var(--accent)}.adapter-state{font-size:.74rem;color:var(--muted)}
+.result-answer{background:#fafaf8;border:1px solid var(--border);border-radius:10px;padding:15px 16px;font-size:.88rem;line-height:1.75;color:#444;margin-top:12px;}
+.result-answer h3{font-family:'Noto Serif TC',serif;font-size:1.02rem;font-weight:400;color:var(--text);margin:0 0 8px}
+.result-answer p{margin:0 0 10px}.result-answer ul{margin:6px 0 0 20px}.result-answer li{margin:4px 0}.result-answer b{color:var(--accent)}
+.tool-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
 @media(max-width:900px){.office{grid-template-columns:1fr;}}
 @media(max-width:540px){.office{padding:26px;}.office-actions{flex-direction:column;}}
 
@@ -273,7 +274,7 @@ footer{
     <label for="need">你的需求</label>
     <textarea id="need" placeholder="例如：我想改善家中陽台植栽，但日照不足；或我想把小坪數住宅需求轉成空間設計參數。"></textarea>
     <div class="office-actions"><button class="btn-main" id="officeBtn" onclick="runFutureOffice()">推薦 AI 機器人</button><button class="btn-ghost" onclick="clearNeed()">清除</button></div>
-    <div class="result" id="result"><div class="result-title" id="resultTitle"></div><div class="result-meta" id="resultMeta"></div><div class="result-reason" id="resultReason"></div><ol class="progress-list" id="progressList"></ol><div class="tool-list" id="toolLinks"></div><div class="adapter-list" id="adapterList"></div><div class="result-answer" id="finalAnswer" style="display:none"></div></div>
+    <div class="result" id="result"><div class="result-title" id="resultTitle"></div><div class="result-meta" id="resultMeta"></div><div class="result-reason" id="resultReason"></div><div class="result-answer" id="finalAnswer" style="display:none"></div><div class="tool-list" id="toolLinks"></div></div>
   </div>
 </section>
 
@@ -372,13 +373,26 @@ async function save(){
 
 
 let futureOfficePoll=null;
+function escHtml(str){return String(str||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function formatRecommendation(res){
+  const primary=res.primary||res.selectedTools?.[0]||{};
+  const others=(res.selectedTools||[]).filter(t=>t.id!==primary.id);
+  const hits=(primary.hits||[]).slice(0,6).join('、')||'景觀/空間需求';
+  return `<h3>推薦主工具：${escHtml(primary.name)}</h3>
+    <p><b>研究者：</b>${escHtml(primary.owner||'')}</p>
+    <p><b>推薦理由：</b>問題命中「${escHtml(hits)}」，適合先使用這個工具。</p>
+    ${others.length?`<p><b>也可搭配：</b>${others.map(t=>escHtml(t.name)).join('、')}</p>`:''}
+    <p><b>使用順序：</b></p>
+    <ul>${(res.selectedTools||[]).map((t,i)=>`<li>${i+1}. ${escHtml(t.name)}${t.hits?.length?`（${escHtml(t.hits.slice(0,4).join('、'))}）`:''}</li>`).join('')}</ul>`;
+}
+
 async function runFutureOffice(){
-  const needEl=document.getElementById('need'),result=document.getElementById('result'),title=document.getElementById('resultTitle'),meta=document.getElementById('resultMeta'),reason=document.getElementById('resultReason'),links=document.getElementById('toolLinks'),adapters=document.getElementById('adapterList'),answer=document.getElementById('finalAnswer'),btn=document.getElementById('officeBtn'),progress=document.getElementById('progressList');
+  const needEl=document.getElementById('need'),result=document.getElementById('result'),title=document.getElementById('resultTitle'),meta=document.getElementById('resultMeta'),reason=document.getElementById('resultReason'),links=document.getElementById('toolLinks'),answer=document.getElementById('finalAnswer'),btn=document.getElementById('officeBtn');
   const need=(needEl.value||'').trim(), mode='auto';
-  if(!need){title.textContent='請先輸入需求';meta.textContent='';reason.textContent='請描述你的景觀、建築、植栽或環境問題，未來事務所才能協助整合。';links.innerHTML='';progress.innerHTML='';answer.style.display='none';result.classList.add('open');return;}
+  if(!need){title.textContent='請先輸入需求';meta.textContent='';reason.textContent='請描述你的景觀、建築、植栽或環境問題，未來事務所才能協助整合。';links.innerHTML='';answer.style.display='none';result.classList.add('open');return;}
   clearInterval(futureOfficePoll);
   btn.disabled=true; btn.textContent='分析中…'; result.classList.add('open');
-  title.textContent='未來事務所分析中'; meta.textContent='正在閱讀需求關鍵字與情境'; reason.textContent=''; links.innerHTML=''; adapters.innerHTML=''; progress.innerHTML=''; answer.style.display='none';
+  title.textContent='未來事務所分析中'; meta.textContent='正在閱讀需求關鍵字與情境'; reason.textContent=''; links.innerHTML=''; answer.style.display='none';
   try{
     const r=await fetch('/api/future-office/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({need,mode})});
     const started=await r.json();
@@ -388,22 +402,20 @@ async function runFutureOffice(){
     links.innerHTML=started.selectedTools.map(t=>`<a class="result-link" href="${t.url}" target="_blank" rel="noopener">開啟 ${t.name} →</a>`).join('');
     await pollFutureOffice(started.jobId);
     futureOfficePoll=setInterval(()=>pollFutureOffice(started.jobId),1800);
-  }catch(e){title.textContent='任務建立失敗';meta.textContent='';reason.textContent=e.message||'請稍後再試';links.innerHTML='';progress.innerHTML='';answer.style.display='none';btn.disabled=false;btn.textContent='推薦 AI 機器人';}
+  }catch(e){title.textContent='任務建立失敗';meta.textContent='';reason.textContent=e.message||'請稍後再試';links.innerHTML='';answer.style.display='none';btn.disabled=false;btn.textContent='推薦 AI 機器人';}
 }
 async function pollFutureOffice(jobId){
-  const title=document.getElementById('resultTitle'),meta=document.getElementById('resultMeta'),reason=document.getElementById('resultReason'),links=document.getElementById('toolLinks'),adapters=document.getElementById('adapterList'),answer=document.getElementById('finalAnswer'),btn=document.getElementById('officeBtn'),progress=document.getElementById('progressList');
+  const title=document.getElementById('resultTitle'),meta=document.getElementById('resultMeta'),reason=document.getElementById('resultReason'),links=document.getElementById('toolLinks'),answer=document.getElementById('finalAnswer'),btn=document.getElementById('officeBtn');
   const r=await fetch('/api/future-office/status?id='+encodeURIComponent(jobId));
   const res=await r.json();
   if(!res.success) throw new Error(res.error||'任務查詢失敗');
-  progress.innerHTML=res.steps.map((s,i)=>`<li class="${i<res.step?'done':i===res.step?'active':''}">${s}</li>`).join('');
   reason.textContent=res.note||'';
-  adapters.innerHTML=(res.selectedTools||[]).map(t=>{const a=t.adapter||{};return `<div class="adapter-item"><b>${t.name}</b><div class="adapter-state">狀態：${a.state||'pending'}｜方式：${a.method||'adapter'}｜輸入：${a.inputType||'未設定'}</div><div>${a.status||''}</div></div>`}).join('');
   if(res.status==='done'){
     clearInterval(futureOfficePoll);
     title.textContent='未來事務所整合答案';
     meta.textContent='推薦工具：'+res.selectedTools.map(t=>t.name+'（'+t.owner+'）').join('、');
     links.innerHTML=res.selectedTools.map(t=>`<a class="result-link" href="${t.url}" target="_blank" rel="noopener">開啟 ${t.name} →</a>`).join('');
-    answer.textContent=res.finalAnswer;
+    answer.innerHTML=formatRecommendation(res);
     answer.style.display='block';
     btn.disabled=false;btn.textContent='推薦 AI 機器人';
   }else{
