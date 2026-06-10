@@ -33,42 +33,26 @@ export function buildResult(need, mode='auto'){
 }
 
 
-export async function callBalconyToolLive(){
-  const payload={physicalParams:{orientation:'south',floor:5,currentFloor:5,balconyDepth:120,balconyWidth:300,city:'台北市'},inputMode:'MODE_1_PEDESTRIAN'};
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),22000);
-  try{
-    const r=await fetch('https://balcony-plant-ai.vercel.app/api/diagnose',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const raw=new TextDecoder('utf-8').decode(await r.arrayBuffer());
-    const events=raw.split('\n\n').filter(x=>x.startsWith('data: ')).map(x=>{try{return JSON.parse(x.slice(6))}catch{return null}}).filter(Boolean);
-    const err=[...events].reverse().find(e=>e.event==='error'||e.success===false);
-    if(err) throw new Error(err.error||'工具回傳錯誤');
-    const result=[...events].reverse().find(e=>e.event==='result'||e.diagnosis);
-    if(!result) throw new Error('工具尚未回傳完整診斷結果');
-    const plants=(result.recommendedPlants||result.plants||[]).slice(0,3).map(p=>`${p.name||''}：${p.matchReason||p.description||''}`).filter(Boolean).join('\n');
-    const report=result.diagnosis?.expertReport||result.expertReport||result.diagnosis?.summary||'';
-    if(!plants&&!report) throw new Error('工具回傳格式不含可用摘要');
-    return `陽台植栽 AI 即時抓取結果：\n推薦植物：\n${plants||'工具未回傳明確植物清單'}\n\n診斷摘要：\n${String(report).slice(0,1200)}${String(report).length>1200?'…':''}`;
-  }finally{clearTimeout(timeout)}
+
+const adapterStatus={
+  'native-plant':{enabled:false,method:'website-adapter',status:'準備接入 NativePlantAI 網站操作'},
+  'studio-apartment':{enabled:false,method:'website-adapter',status:'準備接入 AI 套房空間設計遊戲網站操作'},
+  'balcony-plant':{enabled:false,method:'disabled',status:'陽台植栽 AI 目前外部模型限制，暫停即時操作'},
+  'restorative-env':{enabled:false,method:'image-required',status:'恢復性環境工具需要圖片，上傳流程待接'},
+  'landscape-design':{enabled:false,method:'website-adapter',status:'準備接入 AI 景觀設計研究網站操作'}
+};
+function adapterFallback(tool,need){
+  return `${localAnswer(tool,need)}\n\n【操作狀態】${adapterStatus[tool.id]?.status||'等待接入'}。未來事務所已建立此工具 adapter 位置，接下來會由 OpenClaw worker 實際開啟網站、輸入需求並抓回結果。`;
 }
-function cleanToolError(e){
-  const msg=String(e?.message||e?.name||'unknown');
-  if(e?.name==='AbortError'||msg.includes('timeout')) return '工具回應逾時';
-  if(msg.includes('rate_limit')||msg.includes('429')||msg.includes('rate limit')) return '外部 AI 工具目前達到用量限制';
-  if(msg.length>80) return msg.slice(0,80)+'…';
-  return msg;
+async function runToolAdapter(tool,need){
+  const st=adapterStatus[tool.id]||{};
+  if(!st.enabled) return {tool,status:st.method||'pending-adapter',answer:adapterFallback(tool,need)};
+  return {tool,status:'pending-implementation',answer:adapterFallback(tool,need)};
 }
 export async function buildResultWithLive(need, mode='auto'){
   const selected=pickTools(need);
   const answers=[];
-  for(const tool of selected){
-    if(tool.id==='balcony-plant'){
-      try{answers.push({tool,status:'live',answer:await callBalconyToolLive()});}
-      catch(e){answers.push({tool,status:'live-timeout-fallback',answer:localAnswer(tool,need)+`\n\n（即時操作陽台植栽 AI 未完成：${cleanToolError(e)}）`});}
-    }else{
-      answers.push({tool,status:'worker-pending',answer:localAnswer(tool,need)});
-    }
-  }
+  for(const tool of selected){answers.push(await runToolAdapter(tool,need));}
   return {selectedTools:selected.map(({id,name,owner,url,score,prompt})=>({id,name,owner,url,score,prompt})),answers:answers.map(a=>({tool:a.tool.name,status:a.status,answer:a.answer})),finalAnswer:integrate(need,mode,selected,answers)};
 }
+export const adapters=adapterStatus;
