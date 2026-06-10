@@ -29,20 +29,21 @@ export function integrate(need, mode, selected, answers){
 export function buildResult(need, mode='auto'){
   const selected=pickTools(need);
   const answers=selected.map(tool=>({tool,status:'worker-placeholder',answer:localAnswer(tool, need)}));
-  return {selectedTools:selected.map(({id,name,owner,url,score,prompt})=>({id,name,owner,url,score,prompt})),answers:answers.map(a=>({tool:a.tool.name,status:a.status,answer:a.answer})),finalAnswer:integrate(need,mode,selected,answers)};
+  return {selectedTools:selected.map(({id,name,owner,url,score,prompt})=>({id,name,owner,url,score,prompt,adapter:adapterStatus[id]||null})),answers:answers.map(a=>({tool:a.tool.name,status:a.status,answer:a.answer,adapter:adapterStatus[a.tool.id]||null})),finalAnswer:integrate(need,mode,selected,answers)};
 }
 
 
 
 const adapterStatus={
-  'native-plant':{enabled:false,method:'website-adapter',status:'準備接入 NativePlantAI 網站操作'},
-  'studio-apartment':{enabled:false,method:'website-adapter',status:'準備接入 AI 套房空間設計遊戲網站操作'},
-  'balcony-plant':{enabled:false,method:'disabled',status:'陽台植栽 AI 目前外部模型限制，暫停即時操作'},
-  'restorative-env':{enabled:false,method:'image-required',status:'恢復性環境工具需要圖片，上傳流程待接'},
-  'landscape-design':{enabled:false,method:'website-adapter',status:'準備接入 AI 景觀設計研究網站操作'}
+  'native-plant':{enabled:false,method:'website-adapter',state:'pending',inputType:'文字需求',timeout:25,status:'可開啟網站；尚未找到穩定文字問答 API，待 OpenClaw worker 操作網頁'},
+  'studio-apartment':{enabled:false,method:'website-adapter',state:'pending',inputType:'文字需求 / 空間條件',timeout:25,status:'可開啟網站；需避免複製前端金鑰，改由 worker 操作或自有後端模型轉譯'},
+  'balcony-plant':{enabled:false,method:'disabled',state:'disabled',inputType:'陽台參數',timeout:22,status:'外部 Claude 目前常出現 rate limit / invalid_request，暫停即時操作'},
+  'restorative-env':{enabled:false,method:'image-required',state:'needs_image',inputType:'圖片 + 場域類型',timeout:30,status:'工具需要圖片 FormData；未來事務所需先新增圖片上傳欄位'},
+  'landscape-design':{enabled:false,method:'website-adapter',state:'pending',inputType:'文字需求',timeout:30,status:'Render 網站可能休眠；待 worker 負責喚醒、操作與擷取結果'}
 };
 function adapterFallback(tool,need){
-  return `${localAnswer(tool,need)}\n\n【操作狀態】${adapterStatus[tool.id]?.status||'等待接入'}。未來事務所已建立此工具 adapter 位置，接下來會由 OpenClaw worker 實際開啟網站、輸入需求並抓回結果。`;
+  const st=adapterStatus[tool.id]||{};
+  return `${localAnswer(tool,need)}\n\n【操作狀態】${st.status||'等待接入'}\n【輸入型態】${st.inputType||'未設定'}\n【接入方式】${st.method||'adapter'}。未來事務所已建立此工具 adapter 位置，接下來會由 OpenClaw worker 實際開啟網站、輸入需求並抓回結果。`;
 }
 async function runToolAdapter(tool,need){
   const st=adapterStatus[tool.id]||{};
@@ -53,6 +54,6 @@ export async function buildResultWithLive(need, mode='auto'){
   const selected=pickTools(need);
   const answers=[];
   for(const tool of selected){answers.push(await runToolAdapter(tool,need));}
-  return {selectedTools:selected.map(({id,name,owner,url,score,prompt})=>({id,name,owner,url,score,prompt})),answers:answers.map(a=>({tool:a.tool.name,status:a.status,answer:a.answer})),finalAnswer:integrate(need,mode,selected,answers)};
+  return {selectedTools:selected.map(({id,name,owner,url,score,prompt})=>({id,name,owner,url,score,prompt,adapter:adapterStatus[id]||null})),answers:answers.map(a=>({tool:a.tool.name,status:a.status,answer:a.answer,adapter:adapterStatus[a.tool.id]||null})),finalAnswer:integrate(need,mode,selected,answers)};
 }
 export const adapters=adapterStatus;
