@@ -248,6 +248,26 @@ footer{
 @media(max-width:900px){.office{grid-template-columns:1fr;}}
 @media(max-width:540px){.office{padding:26px;}.office-actions{flex-direction:column;}}
 
+
+.btn-help{
+  display: inline-block;
+  padding: 8px 15px;
+  border-radius: 9px;
+  font-family:'Noto Sans TC',sans-serif;
+  font-size: .8rem;
+  letter-spacing: .02em;
+  cursor: pointer;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background-color: transparent;
+  transition: all .18s ease-in-out;
+}
+.btn-help:hover{
+  background-color: var(--accent-bg);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 </style>
 </head>
 <body>
@@ -264,7 +284,7 @@ footer{
 <section class="office" aria-label="未來事務所">
   <div class="office-copy">
     <div class="office-kicker">Future Office · AI Recommender</div>
-    <h2>未來事務所</h2>
+    <h2>未來事務所</h2><a href="https://youtu.be/-O1PZ64k-KQ" target="_blank" rel="noopener noreferrer" class="btn-help" style="margin-left: 10px; position: relative; top: -2px;">觀看使用說明</a>
     <p>請輸入你的景觀、建築、植栽或環境問題。未來事務所會閱讀需求中的關鍵字與情境，推薦最適合的研究 AI 工具，並提供使用順序與推薦理由。</p>
     <div class="office-tags">
       <span class="tag">景觀設計</span><span class="tag">建築空間</span><span class="tag">原生植物</span><span class="tag">陽台植栽</span><span class="tag">恢復性環境</span>
