@@ -10,5 +10,5 @@ export default async function handler(req,res){
   const steps=['閱讀問題','比對關鍵字','計算推薦分數','排序候選工具','產生推薦理由'];
   const step=Math.min(steps.length-1,Math.floor(age/1800));
   const done=age>steps.length*1800;
-  return res.status(200).json({success:true,jobId:req.query.id,status:done?'done':'running',step,steps,message:done?'整合完成':steps[step],...result,note:'目前為強化版 AI 推薦機器人：依關鍵字、同義詞與問題情境推薦最適合的研究工具，不自動操作外部網站。'});
+  return res.status(200).json({success:true,jobId:req.query.id,status:done?'done':'running',step,steps,message:done?'整合完成':steps[step],...result});
 }

@@ -405,14 +405,16 @@ let futureOfficePoll=null;
 function escHtml(str){return String(str||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
 function formatRecommendation(res){
   const primary=res.primary||res.selectedTools?.[0]||{};
-  const others=(res.selectedTools||[]).filter(t=>t.id!==primary.id);
-  const hits=(primary.hits||[]).slice(0,6).join('、')||'景觀/空間需求';
+  const order=res.recommendedOrder||[];
+  const confidence=res.confidence||{};
+  const analysis=res.analysis||{};
   return `<h3>推薦主工具：${escHtml(primary.name)}</h3>
+    <p><b>我理解你的需求：</b>${escHtml(analysis.intentSummary||'需要判斷適合的研究工具。')}</p>
     <p><b>研究者：</b>${escHtml(primary.owner||'')}</p>
-    <p><b>推薦理由：</b>問題命中「${escHtml(hits)}」，適合先使用這個工具。</p>
-    ${others.length?`<p><b>也可搭配：</b>${others.map(t=>escHtml(t.name)).join('、')}</p>`:''}
-    <p><b>使用順序：</b></p>
-    <ul>${(res.selectedTools||[]).map((t,i)=>`<li>${i+1}. ${escHtml(t.name)}${t.hits?.length?`（${escHtml(t.hits.slice(0,4).join('、'))}）`:''}</li>`).join('')}</ul>`;
+    <p><b>信心程度：</b>${escHtml(confidence.level||'medium')}　${escHtml(confidence.reason||'')}</p>
+    <p><b>建議使用流程：</b></p>
+    <ul>${(order.length?order:(res.selectedTools||[]).map((t,i)=>({step:i+1,name:t.name,purpose:i===0?'主工具':'輔助工具',hits:t.hits,warnings:t.warnings}))).map(o=>`<li><b>${o.step}. ${escHtml(o.name)}</b>｜${escHtml(o.purpose||'推薦工具')}${o.hits?.length?`<br>判斷線索：${escHtml(o.hits.slice(0,5).join('、'))}`:''}${o.warnings?.length?`<br>注意：${escHtml(o.warnings.join('、'))}`:''}</li>`).join('')}</ul>
+    <p><b>推薦邏輯：</b>${escHtml(res.note||'依工具角色卡、適用情境與問題線索綜合判斷。')}</p>`;
 }
 
 async function runFutureOffice(){
