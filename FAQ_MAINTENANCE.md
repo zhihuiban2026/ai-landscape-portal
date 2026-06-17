@@ -22,3 +22,15 @@ Start a FAQ review when any of these conditions are true:
 ## Low-cost policy
 
 Do not use paid AI API for every feedback entry. Prefer rule-based grouping first. Use AI summarization only when there are enough entries to justify it.
+
+## Website design flaw policy
+
+All feedback questions should be collected and reported.
+
+If repeated feedback indicates a broader website design flaw, do **not** silently change the website. First:
+
+1. Summarize the feedback evidence.
+2. Explain why it may be a website design issue.
+3. Propose one or more improvement options.
+4. Ask the team whether to proceed.
+5. Only implement changes after confirmation.
