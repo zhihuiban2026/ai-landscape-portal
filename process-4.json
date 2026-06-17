@@ -1,3 +1,8 @@
 {
-  "blocks": []
+  "blocks": [
+    {
+      "type": "text",
+      "content": "<p class=\"MsoNormal\"><span style=\"font-family: 新細明體, serif; color: rgb(58, 90, 64);\"><span style=\"font-size: 17px;\"><span style=\"font-size: 18px;\"><span style=\"font-size: 19px;\"><span style=\"font-size: 20px;\"><span style=\"font-size: 19px;\"><span style=\"font-size: 18px;\">研究動機</span></span></span></span></span></span></span><span lang=\"EN-US\"><o:p></o:p></span></p>\n\n<p class=\"MsoNormal\"><span style=\"font-family:&quot;新細明體&quot;,serif;mso-ascii-font-family:\nAptos;mso-ascii-theme-font:minor-latin;mso-fareast-theme-font:minor-fareast;\nmso-hansi-font-family:Aptos;mso-hansi-theme-font:minor-latin\">近年來，都市環境對於居民身心健康影響議題，受到研究者與大眾的高度關注，由於受到全球都市化的影響，世界上有高比例的人口生活在都市，而且數量不斷在增加中。</span><span lang=\"EN-US\"><o:p></o:p></span></p>\n\n<p class=\"MsoNormal\"><span style=\"font-family:&quot;新細明體&quot;,serif;mso-ascii-font-family:\nAptos;mso-ascii-theme-font:minor-latin;mso-fareast-theme-font:minor-fareast;\nmso-hansi-font-family:Aptos;mso-hansi-theme-font:minor-latin\">研究指出，人類在都市中的情緒感受，會隨著不同的空間與景觀元素產生變化，引發正向、負向的情緒表達，因此透過理解使用者對環境的情緒反應，是改善當代公共環境品質的重要指標。</span><span lang=\"EN-US\"><o:p></o:p></span></p>\n\n<p class=\"MsoNormal\"><span style=\"font-family:&quot;新細明體&quot;,serif;mso-ascii-font-family:\nAptos;mso-ascii-theme-font:minor-latin;mso-fareast-theme-font:minor-fareast;\nmso-hansi-font-family:Aptos;mso-hansi-theme-font:minor-latin\">由於環境健康指標的建立缺乏參考依據，目前在研究與實務操作仍出現斷層，因此本系統開發目的希望提供城市規劃與設計者，透過情緒地圖檢視城市各區的發展現況，從使用者的生、心理層面理解物理環境的需求，做為營造正向情緒之都市環境參考。</span><span lang=\"EN-US\"><o:p></o:p></span></p>"
+    }
+  ]
 }
