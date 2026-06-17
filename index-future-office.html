@@ -272,6 +272,13 @@ footer{
   border-color: var(--accent);
 }
 
+
+.feedback-fab{position:fixed;right:22px;bottom:22px;z-index:220;background:var(--accent);color:#fff;border:none;border-radius:999px;padding:13px 18px;font-family:'Noto Sans TC',sans-serif;font-size:.86rem;box-shadow:0 12px 32px rgba(0,0,0,.18);cursor:pointer;letter-spacing:.02em}
+.feedback-fab:hover{background:#2d4831}
+.feedback-panel{position:fixed;right:22px;bottom:82px;z-index:221;width:min(390px,calc(100vw - 32px));max-height:78vh;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:0 24px 72px rgba(0,0,0,.18);padding:22px;display:none}
+.feedback-panel.open{display:block}.feedback-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}.feedback-head h2{font-family:'Noto Serif TC',serif;font-size:1.15rem;font-weight:400}.feedback-close{border:none;background:transparent;color:var(--muted);font-size:1.2rem;cursor:pointer}.faq-list{display:grid;gap:10px;margin:14px 0 20px}.faq-item{background:#fafaf8;border:1px solid var(--border);border-radius:10px;padding:11px 12px}.faq-item b{font-size:.86rem;color:var(--text)}.faq-item p{font-size:.8rem;color:var(--muted);line-height:1.65;margin-top:5px}.feedback-field{margin-top:12px}.feedback-field label{display:block;font-size:.76rem;color:var(--muted);letter-spacing:.06em;margin-bottom:6px}.feedback-field select,.feedback-field textarea,.feedback-field input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;background:#fafaf8;font-family:'Noto Sans TC',sans-serif;font-size:.86rem;outline:none}.feedback-field textarea{height:96px;resize:vertical;line-height:1.6}.feedback-actions{display:flex;justify-content:flex-end;margin-top:14px}.feedback-msg{font-size:.82rem;min-height:1.2em;margin-top:10px;text-align:right}.feedback-msg.ok{color:var(--accent)}.feedback-msg.err{color:#c0392b}.privacy-note{font-size:.74rem;color:var(--muted);line-height:1.55;margin-top:8px}
+@media(max-width:540px){.feedback-fab{right:16px;bottom:16px}.feedback-panel{right:16px;bottom:72px}}
+
 </style>
 </head>
 <body>
@@ -311,6 +318,33 @@ footer{
   <div class="cards" id="cards"></div>
 </main>
 
+
+<button class="feedback-fab" onclick="toggleFeedback(true)">❓ FAQ / 回饋</button>
+<div class="feedback-panel" id="feedbackPanel" aria-label="FAQ 與回饋">
+  <div class="feedback-head">
+    <div><h2>FAQ / 使用回饋</h2><p class="privacy-note">有問題或建議都可以留下，協助我們優化網站。</p></div>
+    <button class="feedback-close" onclick="toggleFeedback(false)" aria-label="關閉">×</button>
+  </div>
+  <div class="faq-list" id="faqList"></div>
+  <div class="feedback-field">
+    <label>回饋類型</label>
+    <select id="fb-type">
+      <option>推薦不準</option><option>網站錯誤</option><option>工具連結失效 / 打不開</option><option>使用說明不清楚</option><option>研究成果內容</option><option>其他</option>
+    </select>
+  </div>
+  <div class="feedback-field">
+    <label>問題或建議</label>
+    <textarea id="fb-message" placeholder="請描述你遇到的問題、期待的推薦結果，或對網站的建議。"></textarea>
+  </div>
+  <div class="feedback-field">
+    <label>聯絡方式（選填）</label>
+    <input id="fb-contact" type="text" placeholder="Email / Discord / 姓名皆可，不填也可以">
+    <p class="privacy-note">請勿填寫密碼、身分證字號或其他敏感個資。</p>
+  </div>
+  <div class="feedback-actions"><button class="btn-save" onclick="sendFeedback()">送出回饋</button></div>
+  <p class="feedback-msg" id="fb-msg"></p>
+</div>
+
 <footer>© 2025 &nbsp;東海大學光點計畫 &nbsp;·&nbsp; AI 智慧景觀設計</footer>
 
 <!-- Modal -->
@@ -337,6 +371,27 @@ footer{
 </div>
 
 <script>
+
+async function loadFaq(){
+  const box=document.getElementById('faqList'); if(!box) return;
+  try{
+    const r=await fetch('faq.json?_='+Date.now()); const data=await r.json();
+    box.innerHTML=(data.items||[]).slice(0,5).map(f=>`<div class="faq-item"><b>Q：${escHtml(f.question)}</b><p>A：${escHtml(f.answer)}</p></div>`).join('');
+  }catch{box.innerHTML='<div class="faq-item"><b>FAQ 載入失敗</b><p>請稍後再試。</p></div>'}
+}
+function toggleFeedback(open){const panel=document.getElementById('feedbackPanel');if(panel)panel.classList.toggle('open',open);if(open)loadFaq();}
+async function sendFeedback(){
+  const msg=document.getElementById('fb-msg'), type=document.getElementById('fb-type').value, message=document.getElementById('fb-message').value.trim(), contact=document.getElementById('fb-contact').value.trim();
+  if(!message){msg.textContent='請先輸入問題或建議';msg.className='feedback-msg err';return}
+  msg.textContent='送出中…';msg.className='feedback-msg';
+  try{
+    const r=await fetch('/api/save-feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,message,contact,page:location.href})});
+    const res=await r.json();
+    if(res.success){msg.textContent=res.faq_candidate?'已收到！這類問題已累積，會列入 FAQ 候選。':'已收到，謝謝你的回饋！';msg.className='feedback-msg ok';document.getElementById('fb-message').value='';document.getElementById('fb-contact').value='';}
+    else{throw new Error(res.error||'送出失敗')}
+  }catch(e){msg.textContent=e.message||'送出失敗，請稍後再試';msg.className='feedback-msg err'}
+}
+
 let data=[], cur=null;
 
 async function init(){
