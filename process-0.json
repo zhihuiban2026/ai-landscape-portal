@@ -7,6 +7,10 @@
     },
     {
       "type": "text",
+      "content": "<span style=\"font-weight: bold; color: rgb(87, 84, 115);\"><span style=\"font-size: 21px;\"><span style=\"font-size: 22px;\"><span style=\"font-size: 23px;\"><span style=\"font-size: 24px;\"><span style=\"font-size: 25px;\">一.研究動機&nbsp;</span></span></span></span></span></span>"
+    },
+    {
+      "type": "text",
       "content": ""
     },
     {
@@ -46,7 +50,23 @@
     },
     {
       "type": "text",
-      "content": "<span style=\"font-weight: bold; color: rgb(87, 84, 115);\"><span style=\"font-size: 21px;\"><span style=\"font-size: 22px;\"><span style=\"font-size: 23px;\"><span style=\"font-size: 24px;\"><span style=\"font-size: 25px;\">一.研究動機&nbsp;</span></span></span></span></span></span>"
+      "content": "<span style=\"color: rgb(87, 84, 115); font-size: 25px; font-weight: 700;\">二.網站架構&nbsp;&nbsp;</span>"
+    },
+    {
+      "type": "text",
+      "content": "<span style=\"color: rgb(87, 84, 115); font-size: 25px; font-weight: 700;\">三.驗證、評估&nbsp;&nbsp;</span>"
+    },
+    {
+      "type": "text",
+      "content": "<span style=\"color: rgb(87, 84, 115); font-size: 25px; font-weight: 700;\">四.預期成果&nbsp;&nbsp;</span>"
+    },
+    {
+      "type": "text",
+      "content": "<span style=\"color: rgb(87, 84, 115); font-size: 25px; font-weight: 700;\">五.展覽意涵</span>"
+    },
+    {
+      "type": "text",
+      "content": "<span style=\"color: rgb(87, 84, 115); font-size: 25px;\"><span style=\"font-size: 15px;\"><span style=\"font-size: 14px;\"><span style=\"font-size: 15px;\"><span style=\"font-size: 16px; font-weight: bold;\"><span style=\"font-size: 17px;\"><span style=\"font-size: 18px;\">本研究-NativePlantAI_植徑, 展示概述。</span></span></span></span></span></span></span>"
     }
   ]
 }
