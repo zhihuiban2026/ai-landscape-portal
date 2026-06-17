@@ -1,3 +1,13 @@
 {
-  "items": []
+  "items": [
+    {
+      "id": "fb-1781690191440",
+      "created_at": "2026-06-17T09:56:31.439Z",
+      "type": "其他",
+      "message": "這是一封自動回覆測試。",
+      "contact": "chuan.sybil@gmail.com",
+      "page": "https://ai-landscape-portal.vercel.app/index-future-office.html",
+      "status": "new"
+    }
+  ]
 }
