@@ -387,7 +387,7 @@ async function sendFeedback(){
   try{
     const r=await fetch('/api/save-feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,message,contact,page:location.href})});
     const res=await r.json();
-    if(res.success){msg.textContent=res.auto_reply?.sent?'已收到，並已寄出確認信！':(res.faq_candidate?'已收到！這類問題已累積，會列入 FAQ 候選。':'已收到，謝謝你的回饋！');msg.className='feedback-msg ok';document.getElementById('fb-message').value='';document.getElementById('fb-contact').value='';}
+    if(res.success){msg.textContent=res.auto_reply?.sent?'已收到，並已寄出確認信！':(res.faq_candidate?'已收到！謝謝你的回饋，我們會將這類常見問題納入後續優化。':'已收到，謝謝你的回饋！');msg.className='feedback-msg ok';document.getElementById('fb-message').value='';document.getElementById('fb-contact').value='';}
     else{throw new Error(res.error||'送出失敗')}
   }catch(e){msg.textContent=e.message||'送出失敗，請稍後再試';msg.className='feedback-msg err'}
 }
